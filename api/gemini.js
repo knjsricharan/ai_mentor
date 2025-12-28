@@ -46,6 +46,16 @@ function buildProjectContext(projectData) {
 }
 
 export default async function handler(req, res) {
+  // Enable CORS for all origins (adjust in production if needed)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -54,9 +64,14 @@ export default async function handler(req, res) {
   // Get API key from environment variable
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('GEMINI_API_KEY environment variable is not set');
-    return res.status(500).json({ error: 'Server configuration error: API key not found' });
+    console.error('[GEMINI API] GEMINI_API_KEY environment variable is not set');
+    return res.status(500).json({ 
+      error: 'Server configuration error: API key not found',
+      message: 'Please set GEMINI_API_KEY in Vercel environment variables'
+    });
   }
+
+  console.log('[GEMINI API] Request received:', { type: req.body?.type, hasApiKey: !!apiKey });
 
   try {
     const { type, userMessage, chatHistory = [], projectData = {} } = req.body;
@@ -121,6 +136,7 @@ Be conversational, helpful, and focused. Ask one question at a time.`;
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[GEMINI API] Gemini API error for chat:', errorData);
         throw new Error(errorData.error?.message || `Gemini API error: ${response.status}`);
       }
 
@@ -128,6 +144,7 @@ Be conversational, helpful, and focused. Ask one question at a time.`;
       const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 
         'I apologize, but I encountered an error. Please try again.';
 
+      console.log('[GEMINI API] Successfully generated AI response, length:', aiResponse.length);
       return res.status(200).json({ response: aiResponse.trim() });
 
     } else if (type === 'roadmap') {
@@ -185,11 +202,14 @@ Do not include any markdown, code blocks, or extra text. Only return the JSON ob
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[GEMINI API] Gemini API error for roadmap:', errorData);
         throw new Error(errorData.error?.message || `Gemini API error: ${response.status}`);
       }
 
       const data = await response.json();
       const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      
+      console.log('[GEMINI API] Received roadmap response, length:', responseText.length);
       
       // Extract JSON from response (handle markdown code blocks if present)
       let jsonText = responseText.trim();
@@ -197,7 +217,14 @@ Do not include any markdown, code blocks, or extra text. Only return the JSON ob
         jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       }
       
-      const roadmap = JSON.parse(jsonText);
+      let roadmap;
+      try {
+        roadmap = JSON.parse(jsonText);
+      } catch (parseError) {
+        console.error('[GEMINI API] Failed to parse roadmap JSON:', parseError);
+        console.error('[GEMINI API] Response text:', jsonText.substring(0, 500));
+        throw new Error('Failed to parse roadmap JSON from AI response');
+      }
       
       // Validate and ensure all tasks have completed: false
       if (roadmap.phases && Array.isArray(roadmap.phases)) {
@@ -210,14 +237,17 @@ Do not include any markdown, code blocks, or extra text. Only return the JSON ob
         });
       }
       
+      console.log('[GEMINI API] Successfully generated roadmap with', roadmap.phases?.length || 0, 'phases');
       return res.status(200).json({ roadmap });
     }
 
   } catch (error) {
-    console.error('Error in Gemini API handler:', error);
+    console.error('[GEMINI API] Error in handler:', error);
+    console.error('[GEMINI API] Error stack:', error.stack);
     return res.status(500).json({ 
       error: 'Failed to process request',
-      message: error.message 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }

@@ -15,18 +15,20 @@ import { getFallbackAIResponse, getFallbackRoadmap } from '../utils/devMode';
  * @returns {Promise<string>} AI response
  */
 export const generateAIResponse = async (userMessage, chatHistory = [], projectData = {}) => {
-  // Check if we're in production - if not, use fallback for local dev
-  // Vite sets import.meta.env.PROD to true in production builds
-  const isProduction = import.meta.env.PROD === true;
+  // Check if we're explicitly in development mode
+  // Only use fallback if DEV is explicitly true (local development)
+  const isDev = import.meta.env.DEV === true;
+  const isProd = import.meta.env.PROD === true;
   
-  // Only use fallback if we're NOT in production (i.e., in development)
-  if (!isProduction) {
-    console.log('Development mode detected: Using fallback AI response');
+  // Only skip API if we're definitely in dev mode
+  // If PROD is true OR if DEV is false/undefined, try the API
+  if (isDev && !isProd) {
+    console.log('[DEV MODE] Using fallback AI response');
     return getFallbackAIResponse(userMessage, projectData, true);
   }
 
-  // In production, always call the API
-  console.log('Production mode: Calling Gemini API');
+  // Try the API (production or unknown environment)
+  console.log('[API CALL] Attempting to call Gemini API...', { isDev, isProd, mode: import.meta.env.MODE });
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -41,23 +43,29 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
       }),
     });
 
+    console.log('[API RESPONSE] Status:', response.status, response.statusText);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('[API ERROR] Response error:', errorData);
       // If API returns error, use fallback but without dev mode message
-      console.warn('API error, using fallback response:', errorData);
-      return getFallbackAIResponse(userMessage, projectData, false); // false = don't show dev message
+      return getFallbackAIResponse(userMessage, projectData, false);
     }
 
     const data = await response.json();
+    console.log('[API SUCCESS] Received response:', data.response ? 'Yes' : 'No');
+    
     if (data.response) {
       return data.response;
     }
-    // If no response, use fallback but without dev mode message
+    
+    // If no response in data, use fallback
+    console.warn('[API WARNING] No response in data, using fallback');
     return getFallbackAIResponse(userMessage, projectData, false);
   } catch (error) {
-    // Network error or API unavailable - use fallback but without dev mode message
-    console.warn('API unavailable, using fallback response:', error.message);
-    return getFallbackAIResponse(userMessage, projectData, false); // false = don't show dev message
+    // Network error or API unavailable
+    console.error('[API ERROR] Network/Request error:', error);
+    return getFallbackAIResponse(userMessage, projectData, false);
   }
 };
 
@@ -69,18 +77,20 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
  * @returns {Promise<Object>} Roadmap object with phases and tasks
  */
 export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
-  // Check if we're in production - if not, use fallback for local dev
-  // Vite sets import.meta.env.PROD to true in production builds
-  const isProduction = import.meta.env.PROD === true;
+  // Check if we're explicitly in development mode
+  // Only use fallback if DEV is explicitly true (local development)
+  const isDev = import.meta.env.DEV === true;
+  const isProd = import.meta.env.PROD === true;
   
-  // Only use fallback if we're NOT in production (i.e., in development)
-  if (!isProduction) {
-    console.log('Development mode detected: Using fallback roadmap');
+  // Only skip API if we're definitely in dev mode
+  // If PROD is true OR if DEV is false/undefined, try the API
+  if (isDev && !isProd) {
+    console.log('[DEV MODE] Using fallback roadmap');
     return getFallbackRoadmap(projectData);
   }
 
-  // In production, always call the API
-  console.log('Production mode: Calling Gemini API for roadmap');
+  // Try the API (production or unknown environment)
+  console.log('[API CALL] Attempting to call Gemini API for roadmap...', { isDev, isProd, mode: import.meta.env.MODE });
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -94,18 +104,28 @@ export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
       }),
     });
 
+    console.log('[API RESPONSE] Status:', response.status, response.statusText);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('[API ERROR] Response error:', errorData);
       // If API returns error, use fallback
-      console.warn('API error, using fallback roadmap:', errorData);
       return getFallbackRoadmap(projectData);
     }
 
     const data = await response.json();
-    return data.roadmap || getFallbackRoadmap(projectData);
+    console.log('[API SUCCESS] Received roadmap:', data.roadmap ? 'Yes' : 'No');
+    
+    if (data.roadmap && data.roadmap.phases && data.roadmap.phases.length > 0) {
+      return data.roadmap;
+    }
+    
+    // If no valid roadmap, use fallback
+    console.warn('[API WARNING] No valid roadmap in data, using fallback');
+    return getFallbackRoadmap(projectData);
   } catch (error) {
-    // Network error or API unavailable - use fallback
-    console.warn('API unavailable, using fallback roadmap:', error.message);
+    // Network error or API unavailable
+    console.error('[API ERROR] Network/Request error:', error);
     return getFallbackRoadmap(projectData);
   }
 };
