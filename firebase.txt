@@ -1,0 +1,22 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDg-MREq61oz1065HB8T305vyg-Xra_geA",
+  authDomain: "cerebro-backend-f8688.firebaseapp.com",
+  projectId: "cerebro-backend-f8688",
+  storageBucket: "cerebro-backend-f8688.firebasestorage.app",
+  messagingSenderId: "1091672362578",
+  appId: "1:1091672362578:web:f83049413abb4948c5198b",
+  measurementId: "G-DVKPY0KPYT"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
