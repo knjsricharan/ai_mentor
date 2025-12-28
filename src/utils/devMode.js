@@ -57,24 +57,29 @@ export const isApiAvailable = async () => {
  * Get a fallback AI response for local development
  * @param {string} userMessage - User's message
  * @param {Object} projectData - Project data
+ * @param {boolean} showDevMessage - Whether to show dev mode message (default: true)
  * @returns {string} Fallback response
  */
-export const getFallbackAIResponse = (userMessage, projectData = {}) => {
+export const getFallbackAIResponse = (userMessage, projectData = {}, showDevMessage = true) => {
   const projectName = projectData.name || 'your project';
   
   // Simple keyword-based responses for local dev
   const lowerMessage = userMessage.toLowerCase();
   
+  const devNote = showDevMessage 
+    ? "\n\nNote: You're in local development mode. AI responses will be available after deployment to Vercel."
+    : "\n\nNote: AI service is temporarily unavailable. Please try again later.";
+  
   if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-    return `Hello! I'm your AI Project Mentor. I'm here to help guide you through ${projectName}.\n\nNote: You're in local development mode. AI responses will be available after deployment to Vercel.`;
+    return `Hello! I'm your AI Project Mentor. I'm here to help guide you through ${projectName}.${showDevMessage ? devNote : ''}`;
   }
   
   if (lowerMessage.includes('roadmap') || lowerMessage.includes('plan')) {
-    return `I'd be happy to help you create a roadmap for ${projectName}!\n\nTo generate a roadmap:\n1. Fill in your project details (description, tech stack, timeline)\n2. Or chat with me to gather information\n3. Then go to the Roadmap tab and click "Generate Roadmap"\n\nNote: Full AI roadmap generation will be available after deployment.`;
+    return `I'd be happy to help you create a roadmap for ${projectName}!\n\nTo generate a roadmap:\n1. Fill in your project details (description, tech stack, timeline)\n2. Or chat with me to gather information\n3. Then go to the Roadmap tab and click "Generate Roadmap"${showDevMessage ? devNote : ''}`;
   }
   
   if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
-    return `I can help you with:\n\n1. **Project Planning**: Ask me questions about your project structure, features, or best practices\n2. **Roadmap Generation**: Help you create a step-by-step roadmap for your project\n3. **Technical Guidance**: Get advice on technologies, architecture, and development practices\n4. **Project Details**: I'll ask you questions to better understand your project needs\n\nNote: You're in local development mode. Full AI capabilities will be available after deployment.`;
+    return `I can help you with:\n\n1. **Project Planning**: Ask me questions about your project structure, features, or best practices\n2. **Roadmap Generation**: Help you create a step-by-step roadmap for your project\n3. **Technical Guidance**: Get advice on technologies, architecture, and development practices\n4. **Project Details**: I'll ask you questions to better understand your project needs${showDevMessage ? devNote : ''}`;
   }
   
   if (lowerMessage.includes('description') || lowerMessage.includes('what is')) {
@@ -86,7 +91,7 @@ export const getFallbackAIResponse = (userMessage, projectData = {}) => {
   }
   
   // Default fallback response
-  return `Thanks for your message about ${projectName}!\n\nI'm here to help you with project planning, roadmap creation, and technical guidance. Feel free to ask me:\n- Questions about your project structure\n- Help with planning and timelines\n- Technical recommendations\n- Feature suggestions\n\nNote: You're in local development mode. Full AI responses with Gemini will be available after deployment to Vercel.`;
+  return `Thanks for your message about ${projectName}!\n\nI'm here to help you with project planning, roadmap creation, and technical guidance. Feel free to ask me:\n- Questions about your project structure\n- Help with planning and timelines\n- Technical recommendations\n- Feature suggestions${showDevMessage ? devNote : ''}`;
 };
 
 /**

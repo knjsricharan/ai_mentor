@@ -15,15 +15,18 @@ import { getFallbackAIResponse, getFallbackRoadmap } from '../utils/devMode';
  * @returns {Promise<string>} AI response
  */
 export const generateAIResponse = async (userMessage, chatHistory = [], projectData = {}) => {
-  // Check if we're in local dev mode (using Vite's import.meta.env.DEV)
-  // Only use fallback in development, always try API in production
-  if (import.meta.env.DEV === true) {
-    console.log('Development mode: Using fallback AI response');
-    // Return fallback response immediately without trying API
-    return getFallbackAIResponse(userMessage, projectData);
+  // Check if we're in production - if not, use fallback for local dev
+  // Vite sets import.meta.env.PROD to true in production builds
+  const isProduction = import.meta.env.PROD === true;
+  
+  // Only use fallback if we're NOT in production (i.e., in development)
+  if (!isProduction) {
+    console.log('Development mode detected: Using fallback AI response');
+    return getFallbackAIResponse(userMessage, projectData, true);
   }
 
-  // In production (import.meta.env.PROD === true), always call the API
+  // In production, always call the API
+  console.log('Production mode: Calling Gemini API');
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -40,17 +43,21 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      // If API returns error, use fallback instead of throwing
+      // If API returns error, use fallback but without dev mode message
       console.warn('API error, using fallback response:', errorData);
-      return getFallbackAIResponse(userMessage, projectData);
+      return getFallbackAIResponse(userMessage, projectData, false); // false = don't show dev message
     }
 
     const data = await response.json();
-    return data.response || getFallbackAIResponse(userMessage, projectData);
+    if (data.response) {
+      return data.response;
+    }
+    // If no response, use fallback but without dev mode message
+    return getFallbackAIResponse(userMessage, projectData, false);
   } catch (error) {
-    // Network error or API unavailable - use fallback
+    // Network error or API unavailable - use fallback but without dev mode message
     console.warn('API unavailable, using fallback response:', error.message);
-    return getFallbackAIResponse(userMessage, projectData);
+    return getFallbackAIResponse(userMessage, projectData, false); // false = don't show dev message
   }
 };
 
@@ -62,15 +69,18 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
  * @returns {Promise<Object>} Roadmap object with phases and tasks
  */
 export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
-  // Check if we're in local dev mode (using Vite's import.meta.env.DEV)
-  // Only use fallback in development, always try API in production
-  if (import.meta.env.DEV === true) {
-    console.log('Development mode: Using fallback roadmap');
-    // Return fallback roadmap immediately without trying API
+  // Check if we're in production - if not, use fallback for local dev
+  // Vite sets import.meta.env.PROD to true in production builds
+  const isProduction = import.meta.env.PROD === true;
+  
+  // Only use fallback if we're NOT in production (i.e., in development)
+  if (!isProduction) {
+    console.log('Development mode detected: Using fallback roadmap');
     return getFallbackRoadmap(projectData);
   }
 
-  // In production (import.meta.env.PROD === true), always call the API
+  // In production, always call the API
+  console.log('Production mode: Calling Gemini API for roadmap');
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -86,7 +96,7 @@ export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      // If API returns error, use fallback instead of throwing
+      // If API returns error, use fallback
       console.warn('API error, using fallback roadmap:', errorData);
       return getFallbackRoadmap(projectData);
     }
