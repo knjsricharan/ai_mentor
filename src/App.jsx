@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthOnboardingContainer from './components/AuthOnboardingContainer';
 import Dashboard from './pages/Dashboard';
@@ -8,40 +8,18 @@ import { useState, useEffect } from 'react';
 
 function AppRoutes() {
   const { user, userProfile, profileLoading, isProfileComplete } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
 
+  // Handle onboarding via navigation
   useEffect(() => {
-    // Check if user has seen onboarding before (localStorage for first-time app visit)
-    const seen = localStorage.getItem('hasSeenOnboarding');
-    if (!seen) {
-      setShowOnboarding(true);
-    } else {
-      setHasSeenOnboarding(true);
+    if (user && !profileLoading && isProfileComplete === false) {
+      navigate("/onboarding");
     }
-  }, []);
-
-  // Check if authenticated user needs to complete profile
-  useEffect(() => {
-    if (user && !profileLoading) {
-      // If user is authenticated but profile is incomplete, they should complete it
-      // This is handled by AuthOnboardingContainer, so we don't need to redirect here
-      // Just ensure onboarding state is set correctly
-      if (userProfile && !isProfileComplete) {
-        // User needs to complete profile - AuthOnboardingContainer will handle this
-      } else if (isProfileComplete) {
-        // Profile is complete, ensure onboarding is marked as seen
-        setHasSeenOnboarding(true);
-        setShowOnboarding(false);
-      }
-    }
-  }, [user, userProfile, profileLoading, isProfileComplete]);
+  }, [user, profileLoading, isProfileComplete, navigate]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
-    setShowOnboarding(false);
-    setHasSeenOnboarding(true);
   };
 
   // Show loading while checking auth and profile
@@ -62,56 +40,56 @@ function AppRoutes() {
   }
 
   return (
-    <Router>
-      <Routes>
-        {showOnboarding && !hasSeenOnboarding ? (
-          <Route 
-            path="*" 
-            element={
-              <AuthOnboardingContainer 
-                onOnboardingComplete={handleOnboardingComplete}
-              />
-            } 
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <AuthOnboardingContainer
+            onOnboardingComplete={handleOnboardingComplete}
+            initialView="auth"
           />
-        ) : (
-          <>
-            <Route 
-              path="/login" 
-              element={
-                <AuthOnboardingContainer 
-                  onOnboardingComplete={handleOnboardingComplete}
-                  initialView="auth"
-                />
-              } 
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard projects={projects} setProjects={setProjects} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/project/:id"
-              element={
-                <ProtectedRoute>
-                  <ProjectDetail projects={projects} setProjects={setProjects} />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </>
-        )}
-      </Routes>
-    </Router>
+        }
+      />
+
+      <Route
+        path="/onboarding"
+        element={
+          <AuthOnboardingContainer
+            onOnboardingComplete={handleOnboardingComplete}
+          />
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard projects={projects} setProjects={setProjects} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/project/:id"
+        element={
+          <ProtectedRoute>
+            <ProjectDetail projects={projects} setProjects={setProjects} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
 function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <Router>
+        <AppRoutes />
+      </Router>
     </AuthProvider>
   );
 }
