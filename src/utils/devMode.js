@@ -1,19 +1,26 @@
 /**
- * Utility to detect local development mode
- * Checks if we're running on localhost or if the API is unavailable
+ * Utility to detect local development vs production mode
+ * Uses Vite's environment variables for accurate detection
  */
 
 /**
  * Check if we're in local development mode
+ * Uses Vite's import.meta.env.DEV which is true only in development
  * @returns {boolean} True if in local dev mode
  */
 export const isLocalDev = () => {
-  // Check if we're on localhost
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
-  }
-  return false;
+  // Vite sets import.meta.env.DEV to true in development mode
+  // Vite sets import.meta.env.PROD to true in production mode
+  return import.meta.env.DEV === true;
+};
+
+/**
+ * Check if we're in production mode
+ * Uses Vite's import.meta.env.PROD which is true only in production
+ * @returns {boolean} True if in production mode
+ */
+export const isProduction = () => {
+  return import.meta.env.PROD === true;
 };
 
 /**

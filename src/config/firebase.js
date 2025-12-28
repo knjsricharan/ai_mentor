@@ -10,8 +10,8 @@ const firebaseConfig = {
   projectId: "cerebro-backend-f8688",
   storageBucket: "cerebro-backend-f8688.firebasestorage.app",
   messagingSenderId: "1091672362578",
-  appId: "1:1091672362578:web:f83049413abb4948c5198b",
-  measurementId: "G-DVKPY0KPYT"
+  appId: "1:1091672362578:web:3357dc5a33981881c5198b",
+  measurementId: "G-0FZFJ7FPZM"
 };
 
 // Initialize Firebase

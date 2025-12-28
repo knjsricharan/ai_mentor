@@ -4,7 +4,7 @@
  * Falls back to local dev mode responses when API is unavailable
  */
 
-import { isLocalDev, getFallbackAIResponse, getFallbackRoadmap } from '../utils/devMode';
+import { getFallbackAIResponse, getFallbackRoadmap } from '../utils/devMode';
 
 /**
  * Generate AI response using Vercel Serverless API
@@ -15,13 +15,15 @@ import { isLocalDev, getFallbackAIResponse, getFallbackRoadmap } from '../utils/
  * @returns {Promise<string>} AI response
  */
 export const generateAIResponse = async (userMessage, chatHistory = [], projectData = {}) => {
-  // Check if we're in local dev mode
-  if (isLocalDev()) {
-    console.log('Local dev mode: Using fallback AI response');
+  // Check if we're in local dev mode (using Vite's import.meta.env.DEV)
+  // Only use fallback in development, always try API in production
+  if (import.meta.env.DEV === true) {
+    console.log('Development mode: Using fallback AI response');
     // Return fallback response immediately without trying API
     return getFallbackAIResponse(userMessage, projectData);
   }
 
+  // In production (import.meta.env.PROD === true), always call the API
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -60,13 +62,15 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
  * @returns {Promise<Object>} Roadmap object with phases and tasks
  */
 export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
-  // Check if we're in local dev mode
-  if (isLocalDev()) {
-    console.log('Local dev mode: Using fallback roadmap');
+  // Check if we're in local dev mode (using Vite's import.meta.env.DEV)
+  // Only use fallback in development, always try API in production
+  if (import.meta.env.DEV === true) {
+    console.log('Development mode: Using fallback roadmap');
     // Return fallback roadmap immediately without trying API
     return getFallbackRoadmap(projectData);
   }
 
+  // In production (import.meta.env.PROD === true), always call the API
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
