@@ -2,6 +2,7 @@ import {
   collection, 
   addDoc, 
   getDocs, 
+  getDoc,
   doc,
   updateDoc,
   query,
@@ -192,6 +193,35 @@ export const subscribeToUserProjects = (userId, callback) => {
       unsubscribe();
     }
   };
+};
+
+/**
+ * Get a single project by ID
+ * @param {string} projectId - The project document ID
+ * @returns {Promise<Object|null>} Project object with id, or null if not found
+ * @throws {Error} If fetch fails
+ */
+export const getProject = async (projectId) => {
+  try {
+    if (!projectId) {
+      return null;
+    }
+
+    const projectRef = doc(db, 'projects', projectId);
+    const projectSnap = await getDoc(projectRef);
+    
+    if (!projectSnap.exists()) {
+      return null;
+    }
+    
+    return {
+      id: projectSnap.id,
+      ...projectSnap.data()
+    };
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    throw error;
+  }
 };
 
 /**

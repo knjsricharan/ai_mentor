@@ -46,7 +46,8 @@ const Dashboard = ({ projects = [], setProjects }) => {
     setProjects([...projects, newProject]);
     setShowCreateModal(false);
     // Redirect immediately to the project detail page
-    navigate(`/project/${newProject.id}`, { state: { showDetailsPopup: true } });
+    // Don't use state - ProjectDetail will fetch from Firestore
+    navigate(`/project/${newProject.id}`);
   };
 
   // Classic AI-inspired background pattern (same as auth flow)

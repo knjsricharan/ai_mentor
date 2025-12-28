@@ -1,43 +1,61 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, MessageSquare, BarChart3, Sparkles, Settings } from 'lucide-react';
 import RoadmapView from '../components/RoadmapView';
 import ChatView from '../components/ChatView';
 import ProgressView from '../components/ProgressView';
 import ProjectDetailsPopup from '../components/ProjectDetailsPopup';
 import ProjectSettingsModal from '../components/ProjectSettingsModal';
-import { updateProject } from '../services/projectService';
+import { getProject, updateProject } from '../services/projectService';
 
 const ProjectDetail = ({ projects = [], setProjects }) => {
-  const { id } = useParams();
+  const { id: projectId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   // Set initial tab to 'chat' (AI Mentor) by default
   const [activeTab, setActiveTab] = useState('chat');
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
   const popupShownRef = useRef(false);
   
-  // Find project from the projects list
-  const project = projects.find(p => p.id === id);
-  // Show loading only if we have no projects yet (initial state)
-  const loading = projects.length === 0;
+  // Fetch project from Firestore using projectId from URL params
+  useEffect(() => {
+    if (!projectId) {
+      setLoading(false);
+      return;
+    }
+
+    const loadProject = async () => {
+      try {
+        setLoading(true);
+        // First try to get from props (if available from Dashboard)
+        const projectFromProps = projects.find(p => p.id === projectId);
+        
+        if (projectFromProps) {
+          setProject(projectFromProps);
+          setLoading(false);
+        } else {
+          // If not in props, fetch directly from Firestore
+          const fetchedProject = await getProject(projectId);
+          if (fetchedProject) {
+            setProject(fetchedProject);
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading project:', error);
+        setLoading(false);
+      }
+    };
+
+    loadProject();
+  }, [projectId, projects]);
 
   // Reset popup shown flag when project ID changes
   useEffect(() => {
     popupShownRef.current = false;
-  }, [id]);
-
-  // Check if we should show the popup (from navigation state) - only once per project
-  useEffect(() => {
-    if (location.state?.showDetailsPopup && project && !popupShownRef.current) {
-      setShowDetailsPopup(true);
-      setActiveTab('chat'); // Ensure chat tab is active when popup shows
-      popupShownRef.current = true;
-      // Clear the location state using React Router's navigate
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location.state, project, navigate, location.pathname]);
+  }, [projectId]);
 
   if (loading) {
     return (
@@ -177,9 +195,9 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {activeTab === 'chat' && <ChatView projectId={id} project={project} />}
-        {activeTab === 'roadmap' && <RoadmapView projectId={id} project={project} />}
-        {activeTab === 'progress' && <ProgressView projectId={id} />}
+        {activeTab === 'chat' && project && <ChatView projectId={projectId} project={project} />}
+        {activeTab === 'roadmap' && project && <RoadmapView projectId={projectId} project={project} />}
+        {activeTab === 'progress' && <ProgressView projectId={projectId} />}
       </main>
 
       {/* Project Details Popup */}

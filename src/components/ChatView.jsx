@@ -21,7 +21,7 @@ const ChatView = ({ projectId, project }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Load previous chat messages from Firestore and send initial message if needed
+  // Load previous chat messages from Firestore - Firestore is the source of truth
   useEffect(() => {
     if (!projectId) {
       setMessages([]);
@@ -32,25 +32,19 @@ const ChatView = ({ projectId, project }) => {
     setLoadingHistory(true);
 
     // Subscribe to Firestore messages (real-time updates)
-    // This will load ALL historical messages whenever the component mounts
-    // IMPORTANT: Never clear existing messages until we have confirmed no history exists
+    // Firestore is the SINGLE SOURCE OF TRUTH - UI only displays what's in Firestore
     firestoreUnsubscribeRef.current = loadChatMessages(projectId, (firestoreMessages) => {
       setLoadingHistory(false);
       
-      if (firestoreMessages.length > 0) {
-        // If we have Firestore messages, use them (this includes all historical messages)
-        // This ensures chat history persists across refreshes and re-entries
-        // Only update if we actually have messages to avoid clearing
-        setMessages(firestoreMessages);
-        setInitialMessageSent(true); // Mark as sent since we have messages
-      } else {
-        // No messages yet - only send initial message if we haven't sent it before
-        // and we've confirmed there are no messages in Firestore
-        // DO NOT clear messages here - only set if we're sure there are none
-        if (!initialMessageSent && project) {
-          sendInitialMessage();
-        }
-        // Don't clear messages - let them persist if they exist
+      // ALWAYS set messages from Firestore - this is the source of truth
+      setMessages(firestoreMessages);
+      
+      // Check if we need to send initial message
+      if (firestoreMessages.length === 0 && !initialMessageSent && project) {
+        sendInitialMessage();
+      } else if (firestoreMessages.length > 0) {
+        // Mark as sent since we have messages
+        setInitialMessageSent(true);
       }
     });
 
@@ -59,7 +53,7 @@ const ChatView = ({ projectId, project }) => {
         firestoreUnsubscribeRef.current();
       }
     };
-  }, [projectId]);
+  }, [projectId, project]);
 
   // Send initial message checking project details
   const sendInitialMessage = async () => {
@@ -85,25 +79,7 @@ const ChatView = ({ projectId, project }) => {
       initialContent += "\n\nI can see your project details are complete. Feel free to ask me anything about planning, development, or best practices!";
     }
     
-    const initialMessage = {
-      id: `initial-${Date.now()}`,
-      role: 'assistant',
-      content: initialContent,
-      timestamp: new Date(),
-    };
-    
-    // Update UI immediately - only set if no messages exist (safety check)
-    setMessages(prev => {
-      // Only set initial message if we have no existing messages
-      // This prevents clearing any messages that might have loaded
-      if (prev.length === 0) {
-        return [initialMessage];
-      }
-      // If messages exist, don't add initial message (shouldn't happen, but safety)
-      return prev;
-    });
-    
-    // Save initial message to Firestore (this will trigger the onSnapshot callback)
+    // Save initial message to Firestore - UI will update via real-time listener
     try {
       await saveChatMessage(projectId, 'ai', initialContent);
     } catch (err) {
@@ -125,40 +101,32 @@ const ChatView = ({ projectId, project }) => {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !projectId) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    };
-
-    // STEP 1: Update UI immediately (optimistic update)
-    setMessages(prev => [...prev, userMessage]);
-    const userInput = input;
+    const userInput = input.trim();
     setInput('');
     setLoading(true);
 
-    // STEP 2: Save user message to Firestore (non-blocking, happens after UI update)
-    if (projectId) {
-      saveChatMessage(projectId, 'user', userMessage.content).catch(err => {
-        console.error('Failed to save user message to Firestore:', err);
-        // UI already updated, continue normally
-      });
-    }
-
-    // STEP 3: Generate AI response using Gemini API (with fallback for local dev)
-    // The generateAIResponse function now handles errors internally and returns fallback
     try {
-      // Get chat history for context (use updated messages state which includes the new user message)
-      const updatedMessages = [...messages, userMessage];
-      const chatHistory = updatedMessages.map(m => ({
-        role: m.role === 'assistant' ? 'ai' : 'user',
-        content: m.content
-      }));
+      // STEP 1: Build chat history BEFORE saving (includes current messages + new user message)
+      // This ensures we have the complete context for the API call
+      const chatHistory = [
+        ...messages.map(m => ({
+          role: m.role === 'assistant' ? 'ai' : 'user',
+          content: m.content
+        })),
+        {
+          role: 'user',
+          content: userInput
+        }
+      ];
       
-      // Generate response using Gemini (will use fallback if API unavailable)
+      // STEP 2: Save user message to Firestore
+      // Firestore is the source of truth - UI will update via real-time listener
+      await saveChatMessage(projectId, 'user', userInput);
+      
+      // STEP 3: Generate AI response using Gemini API
+      // Use the chat history we built (includes the new user message)
       // This will never throw - it always returns a response (fallback if needed)
       const aiResponseText = await generateAIResponse(
         userInput,
@@ -166,42 +134,23 @@ const ChatView = ({ projectId, project }) => {
         project || {}
       );
       
-      const aiMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: aiResponseText,
-        timestamp: new Date(),
-      };
+      // STEP 4: Save AI message to Firestore
+      // Firestore listener will update UI automatically
+      await saveChatMessage(projectId, 'ai', aiResponseText);
       
-      // STEP 4: Update UI with AI response immediately
-      setMessages(prev => [...prev, aiMessage]);
       setLoading(false);
-
-      // STEP 5: Save AI message to Firestore (non-blocking, happens after UI update)
-      if (projectId) {
-        saveChatMessage(projectId, 'ai', aiMessage.content).catch(err => {
-          console.error('Failed to save AI message to Firestore:', err);
-          // UI already updated, continue normally
-        });
-      }
     } catch (error) {
       // This should rarely happen now since generateAIResponse handles errors internally
       // But keep as safety net
-      console.error('Unexpected error generating AI response:', error);
-      const errorMessage = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: "I apologize, but I encountered an error processing your message. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      setLoading(false);
+      console.error('Unexpected error in handleSend:', error);
       
-      if (projectId) {
-        saveChatMessage(projectId, 'ai', errorMessage.content).catch(err => {
-          console.error('Failed to save error message:', err);
-        });
-      }
+      // Save error message to Firestore so it appears in chat history
+      const errorMessage = "I apologize, but I encountered an error processing your message. Please try again.";
+      await saveChatMessage(projectId, 'ai', errorMessage).catch(err => {
+        console.error('Failed to save error message:', err);
+      });
+      
+      setLoading(false);
     }
   };
 
