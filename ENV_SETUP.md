@@ -26,10 +26,16 @@ This project uses environment variables to securely store sensitive API keys, pa
    GEMINI_API_KEY=your_actual_api_key_here
    ```
 
-4. **Restart your development server:**
+4. **Install Vercel CLI (required for local development):**
+   ```bash
+   npm i -g vercel
+   ```
+
+5. **Start your development server:**
    ```bash
    npm run dev
    ```
+   This runs `vercel dev` which enables serverless functions locally.
 
 ### For Vercel Deployment
 
@@ -47,9 +53,11 @@ This project uses environment variables to securely store sensitive API keys, pa
 ## 🔍 How It Works
 
 ### Local Development
+- Install Vercel CLI: `npm i -g vercel`
+- Run `vercel dev` to start the development server with serverless functions
 - Vite automatically loads `.env.local` files
 - The API key is read by the Vercel Serverless Function at `/api/gemini.js`
-- For local dev, the app uses fallback responses (see `src/utils/devMode.js`)
+- The app works the same way locally and on Vercel
 
 ### Production (Vercel)
 - Environment variables are set in Vercel dashboard
@@ -97,9 +105,10 @@ project-root/
 
 ### API Not Working Locally
 
-- The app is designed to work in local dev mode without the API
-- You'll see fallback responses instead of real AI responses
-- This is expected behavior - full AI features work after deployment to Vercel
+- Make sure you're running `vercel dev` instead of `npm run dev` to enable serverless functions
+- Verify `GEMINI_API_KEY` is set in `.env.local`
+- Check that the API endpoint `/api/gemini` is accessible (should work with `vercel dev`)
+- For local development, you need Vercel CLI installed: `npm i -g vercel`
 
 ## 📚 Additional Resources
 

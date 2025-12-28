@@ -66,12 +66,20 @@ npm install
    - Open `src/config/app.js`
    - Change `name: 'Your App Name'` to your desired app name
 
-5. Start development server:
+5. Install Vercel CLI (required for serverless functions):
+```bash
+npm i -g vercel
+```
+
+6. Start development server:
 ```bash
 npm run dev
 ```
+This will run `vercel dev` which enables both the frontend and API serverless functions.
 
-6. Open your browser and navigate to `http://localhost:5173`
+> **Note:** If you only want to run the frontend without API functions (for UI development only), you can use `npm run dev:vite`, but API features won't work.
+
+7. Open your browser and navigate to the URL shown in the terminal (usually `http://localhost:3000`)
 
 > **Note:** For detailed environment variable setup instructions, see [ENV_SETUP.md](./ENV_SETUP.md)
 

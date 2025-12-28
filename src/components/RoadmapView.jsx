@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Sparkles, Loader, AlertCircle, MessageSquare, Info } from 'lucide-react';
+import { CheckCircle, Circle, Sparkles, Loader, AlertCircle, MessageSquare } from 'lucide-react';
 import { getRoadmap, saveRoadmap, updateTaskStatus } from '../services/roadmapService';
 import { generateRoadmap } from '../services/geminiService';
 import { loadChatMessages } from '../services/chatService';
 import { checkProjectDetails } from '../services/geminiService';
-import { isLocalDev } from '../utils/devMode';
 
 const RoadmapView = ({ projectId, project }) => {
   const [roadmap, setRoadmap] = useState(null);
@@ -56,7 +55,7 @@ const RoadmapView = ({ projectId, project }) => {
     return detailsCheck.hasAllDetails || hasChatHistory;
   };
 
-  // Generate roadmap using Gemini API (with fallback for local dev)
+  // Generate roadmap using Gemini API
   const handleGenerateRoadmap = async () => {
     if (!canGenerateRoadmap()) {
       return; // Should not happen if button is disabled, but safety check
@@ -73,18 +72,16 @@ const RoadmapView = ({ projectId, project }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
       unsubscribe();
 
-      // Generate roadmap using Gemini (will use fallback if API unavailable)
-      // This will never throw - it always returns a roadmap (fallback if needed)
+      // Generate roadmap using Gemini API
       const generatedRoadmap = await generateRoadmap(project || {}, chatHistory);
       
       // Save to Firestore
       await saveRoadmap(projectId, generatedRoadmap);
       setRoadmap(generatedRoadmap);
     } catch (error) {
-      // This should rarely happen now since generateRoadmap handles errors internally
-      // But keep as safety net
-      console.error('Unexpected error generating roadmap:', error);
-      // Don't show alert - just log the error and let user continue
+      console.error('Error generating roadmap:', error);
+      // Show error to user
+      alert(`Failed to generate roadmap: ${error.message || 'Unknown error'}\n\nFor local development, make sure to run "vercel dev" to start the serverless functions.`);
     } finally {
       setGenerating(false);
     }
@@ -168,28 +165,9 @@ const RoadmapView = ({ projectId, project }) => {
 
   const canGenerate = canGenerateRoadmap();
   const hasRoadmap = roadmap && roadmap.phases && roadmap.phases.length > 0;
-  const isLocal = isLocalDev();
 
   return (
     <div className="space-y-8">
-      {/* Local Dev Mode Notice */}
-      {isLocal && (
-        <div className="card bg-blue-50 border-2 border-blue-200">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-blue-900 mb-1">
-                Local Development Mode
-              </p>
-              <p className="text-sm text-blue-700">
-                You're running in local development. Roadmap generation will use a sample template. 
-                Full AI-powered roadmap generation will be available after deployment to Vercel.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Generate/Regenerate Button */}
       <div className="card">
         <div className="flex items-center justify-between">

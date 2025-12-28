@@ -1,34 +1,25 @@
 /**
  * Gemini API Service for AI Mentor and Roadmap Generation
  * Uses Vercel Serverless API to securely call Google Gemini API
- * Falls back to local dev mode responses when API is unavailable
+ * Works both locally (with vercel dev) and on Vercel production
  */
-
-import { getFallbackAIResponse, getFallbackRoadmap } from '../utils/devMode';
 
 /**
  * Generate AI response using Vercel Serverless API
- * Falls back to local dev mode if API is unavailable
  * @param {string} userMessage - User's message
  * @param {Array} chatHistory - Previous chat messages
  * @param {Object} projectData - Project data (name, description, techStack, etc.)
  * @returns {Promise<string>} AI response
+ * @throws {Error} If API call fails
  */
 export const generateAIResponse = async (userMessage, chatHistory = [], projectData = {}) => {
-  // Check if we're explicitly in development mode
-  // Only use fallback if DEV is explicitly true (local development)
-  const isDev = import.meta.env.DEV === true;
-  const isProd = import.meta.env.PROD === true;
-  
-  // Only skip API if we're definitely in dev mode
-  // If PROD is true OR if DEV is false/undefined, try the API
-  if (isDev && !isProd) {
-    console.log('[DEV MODE] Using fallback AI response');
-    return getFallbackAIResponse(userMessage, projectData, true);
-  }
+  // Normalize chatHistory to ensure roles are "user" | "model"
+  // Map old roles (ai, assistant) to "model" for compatibility
+  const normalizedHistory = chatHistory.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model', // Ensure only "user" or "model"
+    content: msg.content || ''
+  }));
 
-  // Try the API (production or unknown environment)
-  console.log('[API CALL] Attempting to call Gemini API...', { isDev, isProd, mode: import.meta.env.MODE });
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -38,59 +29,63 @@ export const generateAIResponse = async (userMessage, chatHistory = [], projectD
       body: JSON.stringify({
         type: 'chat',
         userMessage,
-        chatHistory,
+        chatHistory: normalizedHistory,
         projectData,
       }),
     });
 
-    console.log('[API RESPONSE] Status:', response.status, response.statusText);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('[API ERROR] Response error:', errorData);
-      // If API returns error, use fallback but without dev mode message
-      return getFallbackAIResponse(userMessage, projectData, false);
+      
+      // Provide helpful error message for 404
+      if (response.status === 404) {
+        throw new Error(
+          'API endpoint not found (404). ' +
+          'Please run "npm run dev" (which uses vercel dev) instead of "npm run dev:vite" to enable serverless functions. ' +
+          'Make sure you have Vercel CLI installed: npm i -g vercel'
+        );
+      }
+      
+      throw new Error(
+        errorData.message || 
+        errorData.error || 
+        `API request failed with status ${response.status}: ${response.statusText}`
+      );
     }
 
     const data = await response.json();
-    console.log('[API SUCCESS] Received response:', data.response ? 'Yes' : 'No');
     
     if (data.response) {
       return data.response;
     }
     
-    // If no response in data, use fallback
-    console.warn('[API WARNING] No response in data, using fallback');
-    return getFallbackAIResponse(userMessage, projectData, false);
+    throw new Error('No response received from API');
   } catch (error) {
+    console.error('[API ERROR] Failed to generate AI response:', error);
+    
+    // Re-throw with helpful message
+    if (error.message) {
+      throw error;
+    }
+    
     // Network error or API unavailable
-    console.error('[API ERROR] Network/Request error:', error);
-    return getFallbackAIResponse(userMessage, projectData, false);
+    throw new Error(
+      'Failed to connect to AI service. ' +
+      'Please ensure the API endpoint is available. ' +
+      'For local development, run "vercel dev" to start the serverless functions.'
+    );
   }
 };
 
 /**
  * Generate roadmap using Vercel Serverless API
- * Falls back to local dev mode if API is unavailable
  * @param {Object} projectData - Project data
  * @param {Array} chatHistory - Chat history for context
  * @returns {Promise<Object>} Roadmap object with phases and tasks
+ * @throws {Error} If API call fails
  */
 export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
-  // Check if we're explicitly in development mode
-  // Only use fallback if DEV is explicitly true (local development)
-  const isDev = import.meta.env.DEV === true;
-  const isProd = import.meta.env.PROD === true;
-  
-  // Only skip API if we're definitely in dev mode
-  // If PROD is true OR if DEV is false/undefined, try the API
-  if (isDev && !isProd) {
-    console.log('[DEV MODE] Using fallback roadmap');
-    return getFallbackRoadmap(projectData);
-  }
-
-  // Try the API (production or unknown environment)
-  console.log('[API CALL] Attempting to call Gemini API for roadmap...', { isDev, isProd, mode: import.meta.env.MODE });
   try {
     const response = await fetch('/api/gemini', {
       method: 'POST',
@@ -104,29 +99,47 @@ export const generateRoadmap = async (projectData = {}, chatHistory = []) => {
       }),
     });
 
-    console.log('[API RESPONSE] Status:', response.status, response.statusText);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('[API ERROR] Response error:', errorData);
-      // If API returns error, use fallback
-      return getFallbackRoadmap(projectData);
+      
+      // Provide helpful error message for 404
+      if (response.status === 404) {
+        throw new Error(
+          'API endpoint not found (404). ' +
+          'Please run "npm run dev" (which uses vercel dev) instead of "npm run dev:vite" to enable serverless functions. ' +
+          'Make sure you have Vercel CLI installed: npm i -g vercel'
+        );
+      }
+      
+      throw new Error(
+        errorData.message || 
+        errorData.error || 
+        `API request failed with status ${response.status}: ${response.statusText}`
+      );
     }
 
     const data = await response.json();
-    console.log('[API SUCCESS] Received roadmap:', data.roadmap ? 'Yes' : 'No');
     
     if (data.roadmap && data.roadmap.phases && data.roadmap.phases.length > 0) {
       return data.roadmap;
     }
     
-    // If no valid roadmap, use fallback
-    console.warn('[API WARNING] No valid roadmap in data, using fallback');
-    return getFallbackRoadmap(projectData);
+    throw new Error('Invalid roadmap data received from API');
   } catch (error) {
+    console.error('[API ERROR] Failed to generate roadmap:', error);
+    
+    // Re-throw with helpful message
+    if (error.message) {
+      throw error;
+    }
+    
     // Network error or API unavailable
-    console.error('[API ERROR] Network/Request error:', error);
-    return getFallbackRoadmap(projectData);
+    throw new Error(
+      'Failed to connect to AI service. ' +
+      'Please ensure the API endpoint is available. ' +
+      'For local development, run "vercel dev" to start the serverless functions.'
+    );
   }
 };
 
