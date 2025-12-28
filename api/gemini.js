@@ -46,35 +46,53 @@ function buildProjectContext(projectData) {
 }
 
 export default async function handler(req, res) {
-  // Enable CORS for all origins (adjust in production if needed)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Get API key from environment variable
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.error('[GEMINI API] GEMINI_API_KEY environment variable is not set');
-    return res.status(500).json({ 
-      error: 'Server configuration error: API key not found',
-      message: 'Please set GEMINI_API_KEY in Vercel environment variables'
-    });
-  }
-
-  console.log('[GEMINI API] Request received:', { type: req.body?.type, hasApiKey: !!apiKey });
-
   try {
-    const { type, userMessage, chatHistory = [], projectData = {} } = req.body;
+    // Enable CORS for all origins (adjust in production if needed)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Get API key from environment variable
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('[GEMINI API] GEMINI_API_KEY environment variable is not set');
+      console.error('[GEMINI API] Available env vars:', Object.keys(process.env).filter(k => k.includes('GEMINI') || k.includes('API')));
+      return res.status(500).json({ 
+        error: 'Server configuration error: API key not found',
+        message: 'Please set GEMINI_API_KEY in Vercel environment variables',
+        hint: 'Check Vercel dashboard > Settings > Environment Variables'
+      });
+    }
+
+    // Parse request body if it's a string (Vercel sometimes sends it as a string)
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        console.error('[GEMINI API] Failed to parse request body:', e);
+        return res.status(400).json({ error: 'Invalid JSON in request body' });
+      }
+    }
+
+    console.log('[GEMINI API] Request received:', { 
+      type: body?.type, 
+      hasApiKey: !!apiKey,
+      method: req.method,
+      url: req.url
+    });
+
+    const { type, userMessage, chatHistory = [], projectData = {} } = body;
 
     if (!type || (type !== 'chat' && type !== 'roadmap')) {
       return res.status(400).json({ error: 'Invalid request type. Must be "chat" or "roadmap"' });
