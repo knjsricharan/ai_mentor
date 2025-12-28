@@ -36,7 +36,19 @@ A modern, minimal, and vibrant React application for AI-powered project mentorin
 npm install
 ```
 
-2. Configure Firebase:
+2. Configure Environment Variables:
+   - Copy `.env.example` to `.env.local`:
+     ```bash
+     cp .env.example .env.local
+     ```
+   - Get your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Add your API key to `.env.local`:
+     ```env
+     GEMINI_API_KEY=your_actual_api_key_here
+     ```
+   - **Important:** Never commit `.env.local` to version control!
+
+3. Configure Firebase:
    - Open `src/config/firebase.js`
    - Replace the placeholder values with your Firebase configuration:
      ```javascript
@@ -50,16 +62,18 @@ npm install
      };
      ```
 
-3. Customize App Name:
+4. Customize App Name:
    - Open `src/config/app.js`
    - Change `name: 'Your App Name'` to your desired app name
 
-4. Start development server:
+5. Start development server:
 ```bash
 npm run dev
 ```
 
-5. Open your browser and navigate to `http://localhost:5173`
+6. Open your browser and navigate to `http://localhost:5173`
+
+> **Note:** For detailed environment variable setup instructions, see [ENV_SETUP.md](./ENV_SETUP.md)
 
 ## Project Structure
 
@@ -132,8 +146,13 @@ Edit `tailwind.config.js` to customize colors:
 
 1. Push your code to GitHub
 2. Import project in Vercel
-3. Add environment variables if needed
+3. **Add environment variables:**
+   - Go to **Settings > Environment Variables**
+   - Add `GEMINI_API_KEY` with your Gemini API key
+   - Select all environments (Production, Preview, Development)
 4. Deploy!
+
+> **Security:** The Gemini API key is stored securely in Vercel environment variables and is never exposed to the frontend code.
 
 ### Other Platforms
 
