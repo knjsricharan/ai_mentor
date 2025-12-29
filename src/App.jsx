@@ -11,13 +11,6 @@ function AppRoutes() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
 
-  // Handle onboarding via navigation
-  useEffect(() => {
-    if (user && !profileLoading && isProfileComplete === false) {
-      navigate("/onboarding");
-    }
-  }, [user, profileLoading, isProfileComplete, navigate]);
-
   const handleOnboardingComplete = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
   };

@@ -17,6 +17,16 @@ const AuthOnboardingContainer = ({
   const [isEntering, setIsEntering] = useState(true);
   const [showProfilePage, setShowProfilePage] = useState(false);
 
+  // Check onboarding state first (only for unauthenticated users or before profile check)
+  useEffect(() => {
+    if (initialView === 'auth' && !user) {
+      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+      if (!hasSeenOnboarding && currentView === 'auth') {
+        setCurrentView('onboarding');
+      }
+    }
+  }, [initialView, user, currentView]);
+
   // Check if user has completed profile when authenticated
   useEffect(() => {
     if (user && !profileLoading) {
@@ -26,23 +36,20 @@ const AuthOnboardingContainer = ({
         return;
       }
       
-      // If user is authenticated but profile is incomplete, show profile form
-      // Only do this if we're on the auth view (not onboarding)
-      if (userProfile && !isProfileComplete && initialView === 'auth' && currentView === 'auth') {
-        // User just logged in and needs to complete profile
-        setCurrentView('welcome1');
+      // If user is authenticated but profile is incomplete, show welcome screens
+      // This handles both new users logging in and existing users with incomplete profiles
+      if (!isProfileComplete) {
+        // Only transition to welcome screens if we're still on auth/onboarding views
+        // Don't interrupt if user is already in the welcome/profile flow
+        if (currentView === 'auth' || currentView === 'onboarding') {
+          setCurrentView('welcome1');
+        }
       }
+    } else if (!user && currentView !== 'auth' && currentView !== 'onboarding') {
+      // If user logs out, reset to auth view
+      setCurrentView('auth');
     }
-  }, [user, userProfile, profileLoading, isProfileComplete, initialView, navigate, currentView]);
-  
-  useEffect(() => {
-    if (initialView === 'auth') {
-      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-      if (!hasSeenOnboarding) {
-        setCurrentView('onboarding');
-      }
-    }
-  }, [initialView]);
+  }, [user, userProfile, profileLoading, isProfileComplete, navigate, currentView]);
 
   // Handle enter animation for new views
   useEffect(() => {
@@ -114,8 +121,7 @@ const AuthOnboardingContainer = ({
     // Profile is saved to Firestore by ProfileForm component
     // Refresh user profile to update context
     await refreshUserProfile();
-    // Navigate to dashboard after profile submission
-    navigate('/dashboard');
+    // The useEffect will automatically redirect to dashboard when isProfileComplete becomes true
   };
 
   // Classic AI-inspired background pattern
