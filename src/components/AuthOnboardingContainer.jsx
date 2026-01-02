@@ -11,11 +11,16 @@ const AuthOnboardingContainer = ({
   initialView = 'onboarding'
 }) => {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const { user, userProfile, profileLoading, isProfileComplete, hasSeenOnboarding, refreshUserProfile } = useAuth();
+=======
+  const { user, userProfile, profileLoading, isProfileComplete, refreshUserProfile } = useAuth();
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
   const [currentView, setCurrentView] = useState(initialView);
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(true);
   const [showProfilePage, setShowProfilePage] = useState(false);
+<<<<<<< HEAD
   const [onboardingCompletedBeforeLogin, setOnboardingCompletedBeforeLogin] = useState(false);
 
   // Check onboarding state from Firestore (for authenticated users) or show by default (for unauthenticated users)
@@ -27,10 +32,18 @@ const AuthOnboardingContainer = ({
       }
     } else if (user && !profileLoading) {
       // For authenticated users, check Firestore
+=======
+
+  // Check onboarding state first (only for unauthenticated users or before profile check)
+  useEffect(() => {
+    if (initialView === 'auth' && !user) {
+      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
       if (!hasSeenOnboarding && currentView === 'auth') {
         setCurrentView('onboarding');
       }
     }
+<<<<<<< HEAD
   }, [initialView, user, currentView, hasSeenOnboarding, profileLoading]);
 
   // Save onboarding completion when user logs in after completing onboarding
@@ -49,6 +62,9 @@ const AuthOnboardingContainer = ({
       saveOnboardingState();
     }
   }, [user, onboardingCompletedBeforeLogin, hasSeenOnboarding, refreshUserProfile]);
+=======
+  }, [initialView, user, currentView]);
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
 
   // Check if user has completed profile when authenticated
   useEffect(() => {
@@ -71,7 +87,10 @@ const AuthOnboardingContainer = ({
     } else if (!user && currentView !== 'auth' && currentView !== 'onboarding') {
       // If user logs out, reset to auth view
       setCurrentView('auth');
+<<<<<<< HEAD
       setOnboardingCompletedBeforeLogin(false);
+=======
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
     }
   }, [user, userProfile, profileLoading, isProfileComplete, navigate, currentView]);
 
@@ -127,6 +146,7 @@ const AuthOnboardingContainer = ({
     }
   }, [currentView]);
 
+<<<<<<< HEAD
   const handleOnboardingComplete = async () => {
     // If user is authenticated, save onboarding completion to Firestore
     if (user) {
@@ -141,6 +161,10 @@ const AuthOnboardingContainer = ({
       // User completed onboarding before logging in - track this so we can save it when they log in
       setOnboardingCompletedBeforeLogin(true);
     }
+=======
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
     setCurrentView('auth');
     onOnboardingComplete?.();
   };

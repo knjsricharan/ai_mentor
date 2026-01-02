@@ -29,6 +29,9 @@ dist-ssr
 *.sw?
 
 .vercel
+<<<<<<< HEAD
 
 .vercel
 .env*.local
+=======
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247

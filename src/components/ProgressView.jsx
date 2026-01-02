@@ -44,6 +44,7 @@ const ProgressView = ({ projectId }) => {
     }
 
     // Calculate overall progress
+<<<<<<< HEAD
     const allTasks = roadmap.phases
       .filter(phase => phase && Array.isArray(phase.tasks))
       .flatMap(phase => phase.tasks.filter(task => task != null));
@@ -60,6 +61,18 @@ const ProgressView = ({ projectId }) => {
         const phaseCompleted = Array.isArray(phaseTasks) 
           ? phaseTasks.filter(task => task?.completed).length 
           : 0;
+=======
+    const allTasks = roadmap.phases.flatMap(phase => phase.tasks);
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(task => task.completed).length;
+    const overall = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Calculate phase progress
+    const phases = roadmap.phases.map(phase => {
+      const phaseTasks = phase.tasks;
+      const phaseTotal = phaseTasks.length;
+      const phaseCompleted = phaseTasks.filter(task => task.completed).length;
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
       const progress = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
       
       let status = 'pending';
@@ -76,6 +89,7 @@ const ProgressView = ({ projectId }) => {
       };
     });
 
+<<<<<<< HEAD
     // Helper function to convert Firestore timestamp to Date
     const convertTimestamp = (timestamp) => {
       if (!timestamp) return null;
@@ -133,6 +147,31 @@ const ProgressView = ({ projectId }) => {
         date: null, // Could be calculated from targetDate
         completed: phases[index]?.status === 'completed',
       }));
+=======
+    // Get recent updates (completed tasks, sorted by completion time)
+    const recentUpdates = roadmap.phases
+      .flatMap(phase => 
+        phase.tasks
+          .filter(task => task.completed)
+          .map(task => ({
+            id: `${phase.id}-${task.id}`,
+            task: task.name,
+            phase: phase.name,
+            status: 'completed',
+            timestamp: new Date(), // In real implementation, track completion timestamp
+            member: 'You',
+          }))
+      )
+      .slice(-5) // Last 5 completed tasks
+      .reverse();
+
+    // Generate milestones from phases
+    const milestones = roadmap.phases.map((phase, index) => ({
+      name: `${phase.name} Complete`,
+      date: null, // Could be calculated from targetDate
+      completed: phases[index].status === 'completed',
+    }));
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
 
     return {
       overall,
@@ -244,7 +283,11 @@ const ProgressView = ({ projectId }) => {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{update.task}</p>
                   <p className="text-sm text-gray-600">
+<<<<<<< HEAD
                     {update.member} • {update.timestamp ? update.timestamp.toLocaleDateString() : 'Completed'}
+=======
+                    {update.member} • {update.timestamp.toLocaleDateString()}
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
                   </p>
                 </div>
               </div>
@@ -283,11 +326,17 @@ const ProgressView = ({ projectId }) => {
                 >
                   {milestone.name}
                 </p>
+<<<<<<< HEAD
                 {milestone.date && (
                   <p className="text-sm text-gray-600">
                     Target: {milestone.date instanceof Date ? milestone.date.toLocaleDateString() : new Date(milestone.date).toLocaleDateString()}
                   </p>
                 )}
+=======
+                <p className="text-sm text-gray-600">
+                  Target: {new Date(milestone.date).toLocaleDateString()}
+                </p>
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
               </div>
             </div>
           ))}

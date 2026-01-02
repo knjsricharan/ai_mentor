@@ -31,8 +31,12 @@ const RoadmapView = ({ projectId, project }) => {
         // Check if user has chat history
         let chatCount = 0;
         const unsubscribe = loadChatMessages(projectId, (messages) => {
+<<<<<<< HEAD
           const validMessages = Array.isArray(messages) ? messages : [];
           chatCount = validMessages.filter(m => m?.role === 'user').length;
+=======
+          chatCount = messages.filter(m => m.role === 'user').length;
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
           setHasChatHistory(chatCount > 0);
         });
 
@@ -67,7 +71,11 @@ const RoadmapView = ({ projectId, project }) => {
       // Get chat history for context
       let chatHistory = [];
       const unsubscribe = loadChatMessages(projectId, (messages) => {
+<<<<<<< HEAD
         chatHistory = Array.isArray(messages) ? messages : [];
+=======
+        chatHistory = messages;
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
       });
       // Wait a bit for messages to load
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -90,6 +98,7 @@ const RoadmapView = ({ projectId, project }) => {
 
   // Toggle task completion and auto-save
   const toggleTask = async (phaseId, taskId) => {
+<<<<<<< HEAD
     if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases) || updating) return;
 
     // Find current task status
@@ -97,6 +106,15 @@ const RoadmapView = ({ projectId, project }) => {
     if (!phase || !phase.tasks || !Array.isArray(phase.tasks)) return;
     
     const task = phase.tasks.find(t => t?.id === taskId);
+=======
+    if (!roadmap || updating) return;
+
+    // Find current task status
+    const phase = roadmap.phases.find(p => p.id === phaseId);
+    if (!phase) return;
+    
+    const task = phase.tasks.find(t => t.id === taskId);
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
     if (!task) return;
 
     const newCompletedStatus = !task.completed;
@@ -104,6 +122,7 @@ const RoadmapView = ({ projectId, project }) => {
 
     try {
       // Optimistically update UI
+<<<<<<< HEAD
       setRoadmap(prev => {
         if (!prev || !prev.phases || !Array.isArray(prev.phases)) return prev;
         return {
@@ -125,12 +144,30 @@ const RoadmapView = ({ projectId, project }) => {
           }),
         };
       });
+=======
+      setRoadmap(prev => ({
+        ...prev,
+        phases: prev.phases.map(phase =>
+          phase.id === phaseId
+            ? {
+                ...phase,
+                tasks: phase.tasks.map(task =>
+                  task.id === taskId
+                    ? { ...task, completed: newCompletedStatus }
+                    : task
+                ),
+              }
+            : phase
+        ),
+      }));
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
 
       // Save to Firestore immediately
       await updateTaskStatus(projectId, phaseId, taskId, newCompletedStatus);
     } catch (error) {
       console.error('Error updating task status:', error);
       // Revert on error
+<<<<<<< HEAD
       setRoadmap(prev => {
         if (!prev || !prev.phases || !Array.isArray(prev.phases)) return prev;
         return {
@@ -152,12 +189,30 @@ const RoadmapView = ({ projectId, project }) => {
           }),
         };
       });
+=======
+      setRoadmap(prev => ({
+        ...prev,
+        phases: prev.phases.map(phase =>
+          phase.id === phaseId
+            ? {
+                ...phase,
+                tasks: phase.tasks.map(task =>
+                  task.id === taskId
+                    ? { ...task, completed: !newCompletedStatus }
+                    : task
+                ),
+              }
+            : phase
+        ),
+      }));
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
     } finally {
       setUpdating(false);
     }
   };
 
   const getProgress = () => {
+<<<<<<< HEAD
     if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases)) return 0;
     const totalTasks = roadmap.phases.reduce((sum, phase) => {
       const tasks = phase?.tasks || [];
@@ -169,6 +224,12 @@ const RoadmapView = ({ projectId, project }) => {
         if (!Array.isArray(tasks)) return sum;
         return sum + tasks.filter(task => task?.completed).length;
       },
+=======
+    if (!roadmap) return 0;
+    const totalTasks = roadmap.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
+    const completedTasks = roadmap.phases.reduce(
+      (sum, phase) => sum + phase.tasks.filter(task => task.completed).length,
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
       0
     );
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -264,6 +325,7 @@ const RoadmapView = ({ projectId, project }) => {
 
           {/* Roadmap Phases */}
           <div className="space-y-6">
+<<<<<<< HEAD
             {roadmap.phases.map((phase, phaseIndex) => {
               const tasks = phase?.tasks || [];
               return (
@@ -286,25 +348,59 @@ const RoadmapView = ({ projectId, project }) => {
                   onClick={() => !updating && phase?.id && task?.id && toggleTask(phase.id, task.id)}
                 >
                   {task?.completed ? (
+=======
+            {roadmap.phases.map((phase, phaseIndex) => (
+          <div key={phase.id} className="card">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                {phaseIndex + 1}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">{phase.name}</h3>
+                <p className="text-gray-600">{phase.description}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 ml-16">
+              {phase.tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => !updating && toggleTask(phase.id, task.id)}
+                >
+                  {task.completed ? (
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
                     <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
                   ) : (
                     <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   )}
                   <span
                     className={`flex-1 ${
+<<<<<<< HEAD
                       task?.completed
+=======
+                      task.completed
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
                         ? 'text-gray-500 line-through'
                         : 'text-gray-900'
                     }`}
                   >
+<<<<<<< HEAD
                     {task?.name || 'Unnamed Task'}
+=======
+                    {task.name}
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
                   </span>
                 </div>
               ))}
             </div>
           </div>
+<<<<<<< HEAD
             );
             })}
+=======
+        ))}
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
       </div>
         </>
       )}

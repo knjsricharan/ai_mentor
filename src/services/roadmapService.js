@@ -81,6 +81,7 @@ export const updateTaskStatus = async (projectId, phaseId, taskId, completed) =>
       throw new Error('Roadmap not found');
     }
 
+<<<<<<< HEAD
     // Update the task with completed status and timestamp
     if (!roadmap.phases || !Array.isArray(roadmap.phases)) {
       throw new Error('Roadmap phases is not a valid array');
@@ -112,6 +113,19 @@ export const updateTaskStatus = async (projectId, phaseId, taskId, completed) =>
           return updatedTask;
         }),
       };
+=======
+    // Update the task
+    const updatedPhases = roadmap.phases.map(phase => {
+      if (phase.id === phaseId) {
+        return {
+          ...phase,
+          tasks: phase.tasks.map(task =>
+            task.id === taskId ? { ...task, completed } : task
+          ),
+        };
+      }
+      return phase;
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
     });
 
     // Save updated roadmap

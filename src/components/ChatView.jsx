@@ -26,10 +26,16 @@ const ChatView = ({ projectId, project }) => {
 
     // Subscribe to Firestore messages (non-blocking - UI continues to work)
     firestoreUnsubscribeRef.current = loadChatMessages(projectId, (firestoreMessages) => {
+<<<<<<< HEAD
       const validMessages = Array.isArray(firestoreMessages) ? firestoreMessages : [];
       if (validMessages.length > 0) {
         // If we have Firestore messages, use them
         setMessages(validMessages);
+=======
+      if (firestoreMessages.length > 0) {
+        // If we have Firestore messages, use them
+        setMessages(firestoreMessages);
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
         setInitialMessageShown(true);
       } else if (!initialMessageShown) {
         // If no messages, show initial greeting immediately in UI
@@ -115,11 +121,19 @@ const ChatView = ({ projectId, project }) => {
     try {
       // STEP 3: Generate AI response
       // Get conversation history (excluding the initial message if it's just a greeting)
+<<<<<<< HEAD
       const conversationHistory = (Array.isArray(messages) ? messages : [])
         .filter(msg => msg && msg.id !== 'initial')
         .map(msg => ({
           role: msg.role === 'model' ? 'model' : 'user',
           content: msg?.content || '',
+=======
+      const conversationHistory = messages
+        .filter(msg => msg.id !== 'initial')
+        .map(msg => ({
+          role: msg.role === 'model' ? 'model' : 'user',
+          content: msg.content,
+>>>>>>> 18f826698bed254cc7f972311445528f984aa247
         }));
 
       const aiResponse = await generateAIResponse(
