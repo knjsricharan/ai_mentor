@@ -12,12 +12,8 @@ function AppRoutes() {
   const [projects, setProjects] = useState([]);
 
   const handleOnboardingComplete = () => {
-<<<<<<< HEAD
     // Onboarding completion is now handled in AuthOnboardingContainer
     // and saved to Firestore when user is authenticated
-=======
-    localStorage.setItem('hasSeenOnboarding', 'true');
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
   };
 
   // Show loading while checking auth and profile

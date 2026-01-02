@@ -20,25 +20,15 @@ const ChatView = ({ projectId, project }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Load previous chat messages from Firestore (non-blocking)
   useEffect(() => {
     if (!projectId) return;
 
-    // Subscribe to Firestore messages (non-blocking - UI continues to work)
     firestoreUnsubscribeRef.current = loadChatMessages(projectId, (firestoreMessages) => {
-<<<<<<< HEAD
       const validMessages = Array.isArray(firestoreMessages) ? firestoreMessages : [];
       if (validMessages.length > 0) {
-        // If we have Firestore messages, use them
         setMessages(validMessages);
-=======
-      if (firestoreMessages.length > 0) {
-        // If we have Firestore messages, use them
-        setMessages(firestoreMessages);
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
         setInitialMessageShown(true);
       } else if (!initialMessageShown) {
-        // If no messages, show initial greeting immediately in UI
         const details = checkProjectDetails(project || {});
         let content =
           "Hello! I'm your AI Project Mentor. I'm here to help guide you through your project.";
@@ -68,10 +58,8 @@ const ChatView = ({ projectId, project }) => {
         setMessages([initialMessage]);
         setInitialMessageShown(true);
 
-        // Save initial message to Firestore (non-blocking)
         saveChatMessage(projectId, 'model', content).catch(err => {
           console.error('Failed to save initial message to Firestore:', err);
-          // UI already updated, continue normally
         });
       }
     });
@@ -83,7 +71,6 @@ const ChatView = ({ projectId, project }) => {
     };
   }, [projectId, project, initialMessageShown]);
 
-  // Cleanup Firestore subscription on unmount
   useEffect(() => {
     return () => {
       if (firestoreUnsubscribeRef.current) {
@@ -103,37 +90,24 @@ const ChatView = ({ projectId, project }) => {
       timestamp: new Date(),
     };
 
-    // STEP 1: Update UI immediately (optimistic update)
     setMessages(prev => [...prev, userMessage]);
     const userInput = input;
     setInput('');
     setLoading(true);
     setError(null);
 
-    // STEP 2: Save user message to Firestore (non-blocking, happens after UI update)
     if (projectId) {
       saveChatMessage(projectId, 'user', userMessage.content).catch(err => {
         console.error('Failed to save user message to Firestore:', err);
-        // UI already updated, continue normally
       });
     }
 
     try {
-      // STEP 3: Generate AI response
-      // Get conversation history (excluding the initial message if it's just a greeting)
-<<<<<<< HEAD
       const conversationHistory = (Array.isArray(messages) ? messages : [])
         .filter(msg => msg && msg.id !== 'initial')
         .map(msg => ({
           role: msg.role === 'model' ? 'model' : 'user',
           content: msg?.content || '',
-=======
-      const conversationHistory = messages
-        .filter(msg => msg.id !== 'initial')
-        .map(msg => ({
-          role: msg.role === 'model' ? 'model' : 'user',
-          content: msg.content,
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
         }));
 
       const aiResponse = await generateAIResponse(
@@ -149,15 +123,12 @@ const ChatView = ({ projectId, project }) => {
         timestamp: new Date(),
       };
       
-      // STEP 4: Update UI with AI response immediately
       setMessages(prev => [...prev, aiMessage]);
       setLoading(false);
 
-      // STEP 5: Save AI message to Firestore (non-blocking, happens after UI update)
       if (projectId) {
         saveChatMessage(projectId, 'model', aiMessage.content).catch(err => {
           console.error('Failed to save AI message to Firestore:', err);
-          // UI already updated, continue normally
         });
       }
     } catch (err) {
@@ -165,7 +136,6 @@ const ChatView = ({ projectId, project }) => {
       setLoading(false);
       setError(err.message || 'Failed to get AI response. Please try again.');
       
-      // Show error message in chat
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
@@ -187,7 +157,6 @@ const ChatView = ({ projectId, project }) => {
         </div>
       )}
       
-      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-white rounded-2xl shadow-lg">
         {messages.map((message) => (
           <div
@@ -241,7 +210,6 @@ const ChatView = ({ projectId, project }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat Input */}
       <form onSubmit={handleSend} className="flex gap-3">
         <input
           type="text"

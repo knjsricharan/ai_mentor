@@ -11,42 +11,25 @@ const AuthOnboardingContainer = ({
   initialView = 'onboarding'
 }) => {
   const navigate = useNavigate();
-<<<<<<< HEAD
   const { user, userProfile, profileLoading, isProfileComplete, hasSeenOnboarding, refreshUserProfile } = useAuth();
-=======
-  const { user, userProfile, profileLoading, isProfileComplete, refreshUserProfile } = useAuth();
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
   const [currentView, setCurrentView] = useState(initialView);
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(true);
   const [showProfilePage, setShowProfilePage] = useState(false);
-<<<<<<< HEAD
   const [onboardingCompletedBeforeLogin, setOnboardingCompletedBeforeLogin] = useState(false);
 
-  // Check onboarding state from Firestore (for authenticated users) or show by default (for unauthenticated users)
   useEffect(() => {
     if (initialView === 'auth' && !user) {
-      // For unauthenticated users, show onboarding by default
       if (currentView === 'auth') {
         setCurrentView('onboarding');
       }
     } else if (user && !profileLoading) {
-      // For authenticated users, check Firestore
-=======
-
-  // Check onboarding state first (only for unauthenticated users or before profile check)
-  useEffect(() => {
-    if (initialView === 'auth' && !user) {
-      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
       if (!hasSeenOnboarding && currentView === 'auth') {
         setCurrentView('onboarding');
       }
     }
-<<<<<<< HEAD
   }, [initialView, user, currentView, hasSeenOnboarding, profileLoading]);
 
-  // Save onboarding completion when user logs in after completing onboarding
   useEffect(() => {
     if (user && onboardingCompletedBeforeLogin && !hasSeenOnboarding) {
       const saveOnboardingState = async () => {
@@ -62,44 +45,29 @@ const AuthOnboardingContainer = ({
       saveOnboardingState();
     }
   }, [user, onboardingCompletedBeforeLogin, hasSeenOnboarding, refreshUserProfile]);
-=======
-  }, [initialView, user, currentView]);
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
 
-  // Check if user has completed profile when authenticated
   useEffect(() => {
     if (user && !profileLoading) {
-      // If user is authenticated and profile is complete, redirect to dashboard
       if (isProfileComplete) {
         navigate('/dashboard');
         return;
       }
       
-      // If user is authenticated but profile is incomplete, show welcome screens
-      // This handles both new users logging in and existing users with incomplete profiles
       if (!isProfileComplete) {
-        // Only transition to welcome screens if we're still on auth/onboarding views
-        // Don't interrupt if user is already in the welcome/profile flow
         if (currentView === 'auth' || currentView === 'onboarding') {
           setCurrentView('welcome1');
         }
       }
     } else if (!user && currentView !== 'auth' && currentView !== 'onboarding') {
-      // If user logs out, reset to auth view
       setCurrentView('auth');
-<<<<<<< HEAD
       setOnboardingCompletedBeforeLogin(false);
-=======
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
     }
   }, [user, userProfile, profileLoading, isProfileComplete, navigate, currentView]);
 
-  // Handle enter animation for new views
   useEffect(() => {
     if (currentView === 'welcome1' || currentView === 'welcome2') {
       setIsExiting(false);
       setIsEntering(true);
-      // Trigger enter animation after a brief moment
       const enterTimer = setTimeout(() => {
         setIsEntering(false);
       }, 50);
@@ -107,7 +75,6 @@ const AuthOnboardingContainer = ({
     }
   }, [currentView]);
 
-  // Handle transition to profile page
   useEffect(() => {
     if (currentView === 'profile') {
       setShowProfilePage(true);
@@ -121,15 +88,14 @@ const AuthOnboardingContainer = ({
     }
   }, [currentView]);
 
-  // Auto-advance welcome screens
   useEffect(() => {
     if (currentView === 'welcome1') {
       const timer = setTimeout(() => {
         setIsExiting(true);
         setTimeout(() => {
           setCurrentView('welcome2');
-        }, 1500); // Fade transition duration
-      }, 1500); // Auto-advance after 1.5 seconds
+        }, 1500);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [currentView]);
@@ -140,15 +106,13 @@ const AuthOnboardingContainer = ({
         setIsExiting(true);
         setTimeout(() => {
           setCurrentView('profile');
-        }, 1500); // Fade transition duration
-      }, 1500); // Auto-advance after 1.5 seconds
+        }, 1500);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [currentView]);
 
-<<<<<<< HEAD
   const handleOnboardingComplete = async () => {
-    // If user is authenticated, save onboarding completion to Firestore
     if (user) {
       try {
         const { updateUserProfile } = await import('../services/userService');
@@ -158,33 +122,21 @@ const AuthOnboardingContainer = ({
         console.error('Error saving onboarding state:', error);
       }
     } else {
-      // User completed onboarding before logging in - track this so we can save it when they log in
       setOnboardingCompletedBeforeLogin(true);
     }
-=======
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('hasSeenOnboarding', 'true');
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
     setCurrentView('auth');
     onOnboardingComplete?.();
   };
 
   const handleAuthSuccess = () => {
-    // The useEffect hook will handle routing based on profile completion
-    // It will check if profile is complete and redirect accordingly
-    // If profile is incomplete, it will show welcome screens
     onAuthSuccess?.();
   };
 
   const handleProfileSubmit = async (data) => {
     console.log('Profile submitted:', data);
-    // Profile is saved to Firestore by ProfileForm component
-    // Refresh user profile to update context
     await refreshUserProfile();
-    // The useEffect will automatically redirect to dashboard when isProfileComplete becomes true
   };
 
-  // Classic AI-inspired background pattern
   const backgroundStyle = {
     backgroundImage: `
       radial-gradient(circle at 50% 0%, rgba(79,70,229,0.18), transparent 55%),
@@ -216,7 +168,6 @@ const AuthOnboardingContainer = ({
     `
   };
 
-  // Show loading while checking profile
   if (user && profileLoading && initialView === 'auth') {
     return (
       <div 
@@ -236,11 +187,9 @@ const AuthOnboardingContainer = ({
       className="h-screen w-screen overflow-hidden"
       style={backgroundStyle}
     >
-      {/* Central Container - ONLY for onboarding and auth */}
       {(currentView === 'onboarding' || currentView === 'auth') && (
         <div className="h-full w-full flex items-center justify-center p-4">
           <div className="w-full max-w-[560px] h-[420px] bg-white rounded-[18px] shadow-xl flex flex-col overflow-hidden">
-            {/* CONTENT AREA - No scroll for onboarding/auth */}
             <div className="flex-1 overflow-hidden px-6 py-4">
               {currentView === 'onboarding' && (
                 <OnboardingWizard onComplete={handleOnboardingComplete} />
@@ -254,7 +203,6 @@ const AuthOnboardingContainer = ({
         </div>
       )}
 
-      {/* Welcome Screens - Rendered directly on background, outside any box */}
       {currentView === 'welcome1' && (
         <div 
           className="h-screen w-screen flex items-center justify-center transition-opacity"
@@ -268,7 +216,7 @@ const AuthOnboardingContainer = ({
             className="text-6xl" 
             style={{ 
               letterSpacing: '0.02em',
-              color: '#818cf8' // light blue / soft indigo
+              color: '#818cf8'
             }}
           >
             Welcome to <span className="font-bold">CereBro</span> <span className="font-normal">AI</span>
@@ -289,7 +237,7 @@ const AuthOnboardingContainer = ({
             className="text-6xl font-bold" 
             style={{ 
               letterSpacing: '0.01em',
-              color: '#818cf8' // light blue / soft indigo
+              color: '#818cf8'
             }}
           >
             Please complete your profile
@@ -297,7 +245,6 @@ const AuthOnboardingContainer = ({
         </div>
       )}
 
-      {/* Full-Page Profile Layout */}
       {showProfilePage && (
         <div 
           className={`h-screen w-screen overflow-y-auto transition-all ${

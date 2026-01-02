@@ -87,19 +87,12 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
       const { id, ...updates } = updatedProject;
       await updateProject(id, updates);
       
-      // Update the project in the projects list (will also be updated by real-time listener)
-<<<<<<< HEAD
       setProjects(prevProjects => {
         if (!Array.isArray(prevProjects)) return [updatedProject];
         return prevProjects.map(p => p?.id === updatedProject?.id ? updatedProject : p);
       });
-=======
-      setProjects(prevProjects => 
-        prevProjects.map(p => p.id === updatedProject.id ? updatedProject : p)
-      );
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
       setShowDetailsPopup(false);
-      setActiveTab('chat'); // Switch to AI Mentor tab after saving
+      setActiveTab('chat');
       popupShownRef.current = true; // Mark as shown so it doesn't appear again
     } catch (error) {
       console.error('Error saving project details:', error);
@@ -119,17 +112,10 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
       const { id, ...updates } = updatedProject;
       await updateProject(id, updates);
       
-      // Update the project in the projects list (will also be updated by real-time listener)
-<<<<<<< HEAD
       setProjects(prevProjects => {
         if (!Array.isArray(prevProjects)) return [updatedProject];
         return prevProjects.map(p => p?.id === updatedProject?.id ? updatedProject : p);
       });
-=======
-      setProjects(prevProjects => 
-        prevProjects.map(p => p.id === updatedProject.id ? updatedProject : p)
-      );
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
     } catch (error) {
       console.error('Error saving project settings:', error);
       throw error; // Let the component handle the error

@@ -107,10 +107,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     profileLoading,
     isProfileComplete: userProfile ? isProfileComplete(userProfile) : false,
-<<<<<<< HEAD
     hasSeenOnboarding: userProfile?.hasSeenOnboarding || false,
-=======
->>>>>>> 18f826698bed254cc7f972311445528f984aa247
     refreshUserProfile,
   };
 
