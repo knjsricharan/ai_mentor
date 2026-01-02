@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: Check if user owns the document (uid matches)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    // Rule 1 & 2: Users can only read/write their own document
+    match /users/{userId} {
+      // Allow read if user is authenticated and owns the document
+      allow read: if isOwner(userId);
+      
+      // Allow create if user is authenticated and creating their own document
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow update if user is authenticated and owns the document
+      allow update: if isOwner(userId);
+      
+      // Allow delete if user is authenticated and owns the document
+      allow delete: if isOwner(userId);
+    }
+    
+    // ============================================
+    // PROJECTS COLLECTION
+    // ============================================
+    // Rule 3: Authenticated users can access projects
+    match /projects/{projectId} {
+      // Allow read if user is authenticated and owns the project
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Allow create if user is authenticated and sets their own userId
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Allow update if user is authenticated and owns the project
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Allow delete if user is authenticated and owns the project
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    // Any other collection or path is denied by default
+    // This ensures only explicitly defined collections are accessible
+  }
+}
+
