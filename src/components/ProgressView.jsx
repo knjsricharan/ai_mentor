@@ -89,6 +89,25 @@ const ProgressView = ({ projectId }) => {
       return null;
     };
 
+    // Format timestamp to IST with date and time
+    const formatToIST = (date) => {
+      if (!date) return 'Not completed yet';
+      try {
+        return date.toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      } catch (error) {
+        console.error('Error formatting timestamp:', error);
+        return 'Not completed yet';
+      }
+    };
+
     const recentUpdates = roadmap.phases
       .filter(phase => phase != null && Array.isArray(phase.tasks))
       .flatMap(phase => 
@@ -102,6 +121,7 @@ const ProgressView = ({ projectId }) => {
               phase: phase?.name || 'Unnamed Phase',
               status: 'completed',
               timestamp: completedAt,
+              timestampIST: formatToIST(completedAt),
               member: 'You',
             };
           })
@@ -229,7 +249,7 @@ const ProgressView = ({ projectId }) => {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{update.task}</p>
                   <p className="text-sm text-gray-600">
-                    {update.member} • {update.timestamp ? update.timestamp.toLocaleDateString() : 'Completed'}
+                    {update.member} • {update.timestampIST}
                   </p>
                 </div>
               </div>

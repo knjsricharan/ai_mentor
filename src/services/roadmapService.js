@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export const getRoadmap = async (projectId) => {
@@ -75,7 +75,8 @@ export const updateTaskStatus = async (projectId, phaseId, taskId, completed) =>
             completed,
           };
           if (completed) {
-            updatedTask.completedAt = serverTimestamp();
+            // Use Timestamp.now() instead of serverTimestamp() for arrays
+            updatedTask.completedAt = Timestamp.now();
           } else {
             const { completedAt, ...taskWithoutTimestamp } = updatedTask;
             return taskWithoutTimestamp;

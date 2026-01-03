@@ -145,8 +145,7 @@ Edit `tailwind.config.js` to customize colors:
 1. Set up Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Enable Google Authentication
 3. Create Firestore database
-4. Set up Cloud Functions for Gemini API integration
-5. Update `src/config/firebase.js` with your config
+4. Update `src/config/firebase.js` with your config
 
 ## Deployment
 
@@ -173,28 +172,24 @@ The `dist/` folder contains the production build ready to deploy.
 
 ## TODO / Integration Points
 
-The following features need backend integration:
+The application is fully functional with the following features:
 
-1. **Firebase Firestore Integration**:
-   - Project creation and storage
-   - Roadmap generation and storage
-   - Progress updates
-   - Chat message history
+1. **Firebase Firestore Integration** ✅:
+   - User authentication and profile storage
+   - Project creation and management
+   - Roadmap generation and storage with persistent timestamps
+   - Progress tracking with real-time updates
+   - Chat message history with AI responses
 
-2. **Google Gemini API**:
-   - Roadmap generation based on project description and team size
+2. **Vercel Serverless Functions** ✅:
+   - Gemini API integration via `/api/gemini.js`
+   - Roadmap generation based on project details and chat history
    - AI chat responses
-   - Progress feedback and suggestions
 
-3. **Email Notifications**:
-   - SMTP integration for alerts
-   - Progress updates
-   - Team member invitations
-
-4. **Team Features**:
-   - Invite team members
+3. **Future Enhancements** (Optional):
+   - Email notifications (SMTP integration)
+   - Team features (invite members, shared projects)
    - Team chat rooms
-   - Shared progress tracking
 
 ## Design Philosophy
 

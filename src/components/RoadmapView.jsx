@@ -4,6 +4,8 @@ import { getRoadmap, saveRoadmap, updateTaskStatus } from '../services/roadmapSe
 import { generateRoadmap } from '../services/geminiService';
 import { loadChatMessages } from '../services/chatService';
 import { checkProjectDetails } from '../services/geminiService';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const RoadmapView = ({ projectId, project }) => {
   const [roadmap, setRoadmap] = useState(null);
@@ -19,29 +21,34 @@ const RoadmapView = ({ projectId, project }) => {
       return;
     }
 
-    const loadData = async () => {
-      try {
-        const existingRoadmap = await getRoadmap(projectId);
-        if (existingRoadmap) {
-          setRoadmap(existingRoadmap);
-        }
-
-        let chatCount = 0;
-        const unsubscribe = loadChatMessages(projectId, (messages) => {
-          const validMessages = Array.isArray(messages) ? messages : [];
-          chatCount = validMessages.filter(m => m?.role === 'user').length;
-          setHasChatHistory(chatCount > 0);
-        });
-
-        setCheckingConditions(false);
-        return () => unsubscribe();
-      } catch (error) {
-        console.error('Error loading roadmap data:', error);
-        setCheckingConditions(false);
+    // Set up real-time listener for roadmap updates
+    const projectRef = doc(db, 'projects', projectId);
+    const unsubscribeRoadmap = onSnapshot(projectRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const projectData = docSnap.data();
+        setRoadmap(projectData.roadmap || null);
+      } else {
+        setRoadmap(null);
       }
-    };
+    }, (error) => {
+      console.error('Error loading roadmap:', error);
+    });
 
-    loadData();
+    // Load chat history for roadmap generation check
+    let chatCount = 0;
+    const unsubscribeChat = loadChatMessages(projectId, (messages) => {
+      const validMessages = Array.isArray(messages) ? messages : [];
+      chatCount = validMessages.filter(m => m?.role === 'user').length;
+      setHasChatHistory(chatCount > 0);
+    });
+
+    setCheckingConditions(false);
+
+    // Cleanup both listeners
+    return () => {
+      unsubscribeRoadmap();
+      unsubscribeChat();
+    };
   }, [projectId]);
 
   const canGenerateRoadmap = () => {
@@ -90,52 +97,12 @@ const RoadmapView = ({ projectId, project }) => {
     setUpdating(true);
 
     try {
-      setRoadmap(prev => {
-        if (!prev || !prev.phases || !Array.isArray(prev.phases)) return prev;
-        return {
-          ...prev,
-          phases: prev.phases.map(phase => {
-            if (phase?.id === phaseId) {
-              const tasks = phase?.tasks || [];
-              if (!Array.isArray(tasks)) return phase;
-              return {
-                ...phase,
-                tasks: tasks.map(task =>
-                  task?.id === taskId
-                    ? { ...task, completed: newCompletedStatus }
-                    : task
-                ),
-              };
-            }
-            return phase;
-          }),
-        };
-      });
-
+      // Update Firestore - the onSnapshot listener will update the UI
       await updateTaskStatus(projectId, phaseId, taskId, newCompletedStatus);
     } catch (error) {
       console.error('Error updating task status:', error);
-      setRoadmap(prev => {
-        if (!prev || !prev.phases || !Array.isArray(prev.phases)) return prev;
-        return {
-          ...prev,
-          phases: prev.phases.map(phase => {
-            if (phase?.id === phaseId) {
-              const tasks = phase?.tasks || [];
-              if (!Array.isArray(tasks)) return phase;
-              return {
-                ...phase,
-                tasks: tasks.map(task =>
-                  task?.id === taskId
-                    ? { ...task, completed: !newCompletedStatus }
-                    : task
-                ),
-              };
-            }
-            return phase;
-          }),
-        };
-      });
+      // Show error to user
+      alert('Failed to update task. Please try again.');
     } finally {
       setUpdating(false);
     }

@@ -15,296 +15,222 @@ This document lists all the features and data in your app that need to be connec
   - Auth state management
   - Logout functionality
 
-### 2. **Projects - Basic CRUD** ✅
-- **Status**: Partially integrated
-- **Location**: `src/services/projectService.js`, `src/pages/Dashboard.jsx`
+### 2. **User Profile Data** ✅
+- **Status**: Fully integrated
+- **Location**: `src/services/userService.js`
+- **Features**:
+  - ✅ Profile data stored in Firestore (`users/{uid}`)
+  - ✅ Load profile from Firestore
+  - ✅ Update profile (firstName, surname, age, skills, etc.)
+  - ✅ All profile fields properly saved and retrieved
+
+### 3. **Onboarding State** ✅
+- **Status**: Fully integrated
+- **Location**: `src/services/userService.js`, `src/components/AuthOnboardingContainer.jsx`
+- **Features**:
+  - ✅ `hasSeenOnboarding` stored in Firestore
+  - ✅ Onboarding completion saves to Firestore
+  - ✅ No localStorage usage for onboarding state
+
+### 4. **Projects - Full CRUD** ✅
+- **Status**: Fully integrated
+- **Location**: `src/services/projectService.js`
 - **Features**:
   - ✅ Create projects (`createProject()`)
-  - ✅ Fetch user projects (`getMyProjects()`)
+  - ✅ Fetch user projects (`getUserProjects()`)
   - ✅ Real-time project updates (`subscribeToUserProjects()`)
   - ✅ Update project details (`updateProject()`)
-  - ⚠️ **Issue**: `CreateProjectModal.jsx` uses old API signature - needs update
+  - ✅ Delete projects (`deleteProject()`)
+  - ✅ Get single project (`getProject()`)
 
----
+### 5. **Project Roadmaps** ✅
+- **Status**: Fully integrated
+- **Location**: `src/services/roadmapService.js`, `src/components/RoadmapView.jsx`
+- **Features**:
+  - ✅ Roadmaps stored in Firestore (`projects/{projectId}/roadmap` field)
+  - ✅ AI-generated roadmaps via Vercel Serverless Function
+  - ✅ Task completion status persisted in Firestore
+  - ✅ Real-time roadmap updates with `onSnapshot`
+  - ✅ Timestamps using `Timestamp.now()` for array compatibility
 
-## 🔴 **NEEDS FIREBASE INTEGRATION**
+### 6. **Project Progress Data** ✅
+- **Status**: Fully integrated
+- **Location**: `src/components/ProgressView.jsx`
+- **Features**:
+  - ✅ Progress calculated from roadmap data
+  - ✅ Real-time progress updates
+  - ✅ Task completion timestamps with IST display
+  - ✅ Recent updates tracking
+  - ✅ Phase-level progress tracking
 
-### 1. **User Profile Data** 🔴 HIGH PRIORITY
-- **Current State**: Stored in `localStorage`
-- **Location**: 
-  - `src/components/ProfileForm.jsx`
-  - `src/components/AuthOnboardingContainer.jsx` (line 92-93)
-- **What to do**:
-  - Save profile data to `users/{uid}` document in Firestore
-  - Fields to save:
-    - `firstName`, `surname`, `age`, `phoneNumber`
-    - `preferredLanguages`, `skills`, `projectsDone`
-    - `linkedinProfile`, `githubProfile`
-  - Load profile data from Firestore on app start
-  - Update existing user document instead of creating new one
+### 7. **AI Chat Messages** ✅
+- **Status**: Fully integrated
+- **Location**: `src/services/chatService.js`, `src/components/ChatView.jsx`
+- **Features**:
+  - ✅ Chat messages stored in Firestore (`projects/{projectId}/mentorChat` subcollection)
+  - ✅ Real-time message updates with `onSnapshot`
+  - ✅ AI responses via Vercel Serverless Function
+  - ✅ Chat history persisted and loaded correctly
 
-**Files to modify**:
-- `src/components/ProfileForm.jsx` - Save to Firestore on submit
-- `src/components/AuthOnboardingContainer.jsx` - Remove localStorage, use Firestore
-- Create `src/services/userService.js` - Profile CRUD operations
-
----
-
-### 2. **Onboarding State** 🔴 MEDIUM PRIORITY
-- **Current State**: Stored in `localStorage` (`hasSeenOnboarding`)
-- **Location**: 
-  - `src/App.jsx` (lines 16, 25)
-  - `src/components/AuthOnboardingContainer.jsx` (lines 20, 80)
-- **What to do**:
-  - Store `hasSeenOnboarding` in user document (`users/{uid}`)
-  - Check Firestore instead of localStorage
-  - Update user document when onboarding is completed
-
-**Files to modify**:
-- `src/App.jsx` - Check Firestore for onboarding status
-- `src/components/AuthOnboardingContainer.jsx` - Update Firestore on completion
-
----
-
-### 3. **Project Roadmaps** 🔴 HIGH PRIORITY
-- **Current State**: Mock data with TODO comments
-- **Location**: `src/components/RoadmapView.jsx` (lines 10-50)
-- **What to do**:
-  - Create `roadmaps` collection in Firestore
-  - Structure: `roadmaps/{projectId}`
-  - Fields:
-    - `projectId` (reference to project)
-    - `phases` (array of phase objects)
-    - `updatedAt` (server timestamp)
-  - Fetch roadmap from Firestore on component mount
-  - Update task completion status in Firestore
-  - Generate initial roadmap when project is created (or via Cloud Function)
-
-**Files to modify**:
-- `src/components/RoadmapView.jsx` - Replace mock data with Firestore queries
-- Create `src/services/roadmapService.js` - Roadmap CRUD operations
-
-**Data Structure**:
-```javascript
-{
-  projectId: "project123",
-  phases: [
-    {
-      id: "phase1",
-      name: "Planning & Setup",
-      description: "...",
-      tasks: [
-        { id: "task1", name: "...", completed: false }
-      ]
-    }
-  ],
-  updatedAt: serverTimestamp()
-}
-```
-
----
-
-### 4. **Project Progress Data** 🔴 HIGH PRIORITY
-- **Current State**: Mock data with TODO comments
-- **Location**: `src/components/ProgressView.jsx` (lines 9-50)
-- **What to do**:
-  - Calculate progress from roadmap data (or store separately)
-  - Store progress updates in Firestore
-  - Track:
-    - Overall progress percentage
-    - Phase-level progress
-    - Recent task updates
-    - Milestones completion
-  - Real-time updates when tasks are completed
-
-**Files to modify**:
-- `src/components/ProgressView.jsx` - Replace mock data with Firestore queries
-- Can derive from roadmap data or create separate `progress/{projectId}` collection
-
-**Data Structure**:
-```javascript
-{
-  projectId: "project123",
-  overall: 35,
-  phases: [
-    { name: "Planning", progress: 67, status: "in-progress" }
-  ],
-  recentUpdates: [
-    { task: "...", status: "completed", timestamp: ... }
-  ],
-  milestones: [...]
-}
-```
-
----
-
-### 5. **AI Chat Messages** 🔴 HIGH PRIORITY
-- **Current State**: Mock responses, stored only in component state
-- **Location**: `src/components/ChatView.jsx` (lines 5-68)
-- **What to do**:
-  - Create `chats` collection in Firestore
-  - Structure: `chats/{projectId}/messages/{messageId}`
-  - Store both user and AI messages
-  - Load chat history from Firestore on component mount
-  - Save new messages to Firestore
-  - Integrate with Firebase Cloud Functions for AI responses (Gemini API)
-  - Real-time message updates
-
-**Files to modify**:
-- `src/components/ChatView.jsx` - Replace mock with Firestore
-- Create `src/services/chatService.js` - Chat CRUD operations
-- Set up Firebase Cloud Function for AI responses
-
-**Data Structure**:
-```javascript
-// Collection: chats/{projectId}/messages/{messageId}
-{
-  role: "user" | "assistant",
-  content: "...",
-  timestamp: serverTimestamp(),
-  projectId: "project123"
-}
-```
-
----
-
-### 6. **Project Details/Settings** 🟡 MEDIUM PRIORITY
-- **Current State**: Partially integrated (updates work, but initial load may need work)
-- **Location**: 
-  - `src/components/ProjectDetailsPopup.jsx`
-  - `src/components/ProjectSettingsModal.jsx`
-  - `src/pages/ProjectDetail.jsx`
-- **What to do**:
-  - ✅ Updates already save to Firestore
-  - ⚠️ Verify that project data loads correctly from Firestore
-  - Ensure all project fields are properly synced
-
-**Files to check**:
-- Verify `ProjectDetail.jsx` loads project from Firestore correctly
-- Ensure real-time updates work for project details
+### 8. **Project Details/Settings** ✅
+- **Status**: Fully integrated
+- **Location**: `src/components/ProjectDetailsPopup.jsx`, `src/components/ProjectSettingsModal.jsx`
+- **Features**:
+  - ✅ Updates save to Firestore
+  - ✅ Project data loads from Firestore
+  - ✅ Real-time updates work correctly
 
 ---
 
 ## 🟡 **OPTIONAL ENHANCEMENTS**
 
-### 7. **User Preferences** 🟡 LOW PRIORITY
+### 1. **Email Notifications** 🟡 LOW PRIORITY
+- SMTP integration for progress updates and alerts
+- Currently: Not implemented
+
+### 2. **Team Features** 🟡 LOW PRIORITY
+- Invite team members to projects
+- Shared project access
+- Team chat rooms
+- Currently: Not implemented
+
+### 3. **User Preferences** 🟡 LOW PRIORITY
 - Store user preferences (theme, notifications, etc.) in `users/{uid}` document
 - Currently: Not implemented
 
-### 8. **Activity Logs** 🟡 LOW PRIORITY
+### 4. **Activity Logs** 🟡 LOW PRIORITY
 - Track user activity (project views, actions, etc.)
 - Collection: `activity/{userId}/logs/{logId}`
-
-### 9. **Notifications** 🟡 LOW PRIORITY
-- Store notifications in Firestore
-- Use Firebase Cloud Messaging for push notifications
-- Collection: `notifications/{userId}/messages/{messageId}`
+- Currently: Not implemented
 
 ---
 
-## 📋 **SUMMARY BY PRIORITY**
+## 📋 **SUMMARY**
 
-### **HIGH PRIORITY** (Core Features)
-1. ✅ Projects CRUD - **DONE** (but needs API signature fix)
-2. 🔴 User Profile Data - **TODO**
-3. 🔴 Project Roadmaps - **TODO**
-4. 🔴 Project Progress - **TODO**
-5. 🔴 AI Chat Messages - **TODO**
+### **✅ COMPLETE** (All Core Features Working)
+1. ✅ User Authentication - **DONE**
+2. ✅ User Profile Storage - **DONE**
+3. ✅ Onboarding State - **DONE**
+4. ✅ Projects Full CRUD - **DONE**
+5. ✅ Project Roadmaps with AI Generation - **DONE**
+6. ✅ Progress Tracking with Timestamps - **DONE**
+7. ✅ AI Chat Messages with History - **DONE**
+8. ✅ Project Details/Settings - **DONE**
+9. ✅ Vercel Serverless Functions for AI - **DONE**
 
-### **MEDIUM PRIORITY** (User Experience)
-6. 🔴 Onboarding State - **TODO**
-7. 🟡 Project Details Verification - **CHECK**
-
-### **LOW PRIORITY** (Nice to Have)
-8. 🟡 User Preferences
-9. 🟡 Activity Logs
-10. 🟡 Notifications
-
----
-
-## 🔧 **FILES THAT NEED MODIFICATION**
-
-### **Create New Service Files**:
-1. `src/services/userService.js` - User profile operations
-2. `src/services/roadmapService.js` - Roadmap CRUD
-3. `src/services/chatService.js` - Chat message operations
-4. `src/services/progressService.js` - Progress tracking (optional, can derive from roadmap)
-
-### **Modify Existing Files**:
-1. `src/components/ProfileForm.jsx` - Save to Firestore
-2. `src/components/AuthOnboardingContainer.jsx` - Remove localStorage
-3. `src/App.jsx` - Check Firestore for onboarding
-4. `src/components/RoadmapView.jsx` - Connect to Firestore
-5. `src/components/ProgressView.jsx` - Connect to Firestore
-6. `src/components/ChatView.jsx` - Connect to Firestore + Cloud Functions
-7. `src/components/CreateProjectModal.jsx` - Fix API signature mismatch
+### **🟡 OPTIONAL** (Future Enhancements)
+10. 🟡 Email Notifications
+11. 🟡 Team Features
+12. 🟡 User Preferences
+13. 🟡 Activity Logs
 
 ---
 
-## 🗂️ **FIRESTORE COLLECTIONS NEEDED**
+## 🔧 **SERVICES IMPLEMENTED**
 
-### **Already Exists**:
-- ✅ `users/{uid}` - User documents
-- ✅ `projects/{projectId}` - Project documents
-
-### **Need to Create**:
-- 🔴 `roadmaps/{projectId}` - Roadmap data per project
-- 🔴 `chats/{projectId}/messages/{messageId}` - Chat messages (subcollection)
-- 🟡 `progress/{projectId}` - Progress tracking (optional, can derive from roadmap)
-- 🟡 `notifications/{userId}/messages/{messageId}` - Notifications (optional)
+### **Existing Service Files**:
+1. ✅ `src/services/authService.js` - Authentication operations
+2. ✅ `src/services/userService.js` - User profile operations
+3. ✅ `src/services/projectService.js` - Project CRUD operations
+4. ✅ `src/services/roadmapService.js` - Roadmap CRUD operations
+5. ✅ `src/services/chatService.js` - Chat message operations
+6. ✅ `src/services/geminiService.js` - AI integration
+7. ✅ `api/gemini.js` - Vercel Serverless Function for Gemini API
 
 ---
 
-## 🔐 **SECURITY RULES TO ADD**
+## 🗂️ **FIRESTORE COLLECTIONS**
 
-Update `firestore.rules` to include:
+### **Active Collections**:
+- ✅ `users/{uid}` - User profiles and authentication data
+- ✅ `projects/{projectId}` - Project documents with roadmap field
+- ✅ `projects/{projectId}/mentorChat/{messageId}` - Chat messages (subcollection)
 
+### **Data Structure**:
+
+#### Projects Collection
 ```javascript
-// Roadmaps
-match /roadmaps/{projectId} {
-  allow read, write: if request.auth != null && 
-    get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
-}
-
-// Chat messages
-match /chats/{projectId}/messages/{messageId} {
-  allow read, write: if request.auth != null && 
-    get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
-}
-
-// Progress (if separate collection)
-match /progress/{projectId} {
-  allow read, write: if request.auth != null && 
-    get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
+{
+  userId: string,
+  title: string,
+  description: string,
+  domain: string,
+  teamSize: number,
+  targetDate: string,
+  techStack: array,
+  status: "active",
+  createdAt: Timestamp,
+  updatedAt: Timestamp,
+  roadmap: {
+    phases: [
+      {
+        id: string,
+        name: string,
+        description: string,
+        tasks: [
+          {
+            id: string,
+            name: string,
+            completed: boolean,
+            completedAt: Timestamp // Uses Timestamp.now() for array compatibility
+          }
+        ]
+      }
+    ],
+    createdAt: Timestamp,
+    updatedAt: Timestamp
+  }
 }
 ```
 
 ---
 
-## 📝 **NEXT STEPS**
+## 🔐 **SECURITY RULES**
 
-1. **Fix CreateProjectModal API mismatch** (use new `createProject(title)` signature)
-2. **Implement user profile service** (save/load from Firestore)
-3. **Connect RoadmapView to Firestore**
-4. **Connect ProgressView to Firestore**
-5. **Connect ChatView to Firestore + Cloud Functions**
-6. **Update onboarding to use Firestore**
-7. **Update Firestore security rules** for new collections
+Current Firestore security rules in `firestore.rules` include:
+
+```javascript
+// Users collection
+match /users/{userId} {
+  allow read, write: if isOwner(userId);
+}
+
+// Projects collection
+match /projects/{projectId} {
+  allow read, write: if isAuthenticated() && request.auth.uid == resource.data.userId;
+}
+
+// Chat messages subcollection
+match /projects/{projectId}/mentorChat/{messageId} {
+  allow read, write: if isAuthenticated() && 
+    get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
+}
+```
+
+✅ All necessary security rules are implemented and deployed.
 
 ---
 
-## ⚠️ **KNOWN ISSUES**
+## 📝 **ARCHITECTURE NOTES**
 
-1. **API Mismatch**: `CreateProjectModal.jsx` calls `createProject(userId, projectData)` but new service only has `createProject(title)`
-2. **Missing subscribeToUserProjects**: The new `projectService.js` doesn't have this function, but `Dashboard.jsx` uses it
-3. **Missing updateProject**: `ProjectDetail.jsx` uses `updateProject()` but it's not in the new service file
+### **AI Integration**
+- ✅ Uses **Vercel Serverless Functions** (not Firebase Cloud Functions)
+- ✅ Gemini API called via `/api/gemini.js`
+- ✅ API key securely stored in Vercel environment variables
 
----
+### **Timestamp Handling**
+- ✅ Root-level fields use `serverTimestamp()`
+- ✅ Array/nested fields use `Timestamp.now()`
+- ✅ Reason: Firestore doesn't support `serverTimestamp()` inside arrays
 
-## 🎯 **QUICK WINS** (Easiest to implement first)
+### **Real-time Updates**
+- ✅ Projects: `onSnapshot` listener in Dashboard
+- ✅ Roadmaps: `onSnapshot` listener in RoadmapView
+- ✅ Progress: `onSnapshot` listener in ProgressView
+- ✅ Chat: `onSnapshot` listener in ChatView
 
-1. Fix `CreateProjectModal.jsx` API call
-2. Add missing functions to `projectService.js` (`updateProject`, `subscribeToUserProjects`)
-3. Move onboarding state to Firestore (simple boolean field)
-4. Save user profile to Firestore (extend existing user document)
+### **Data Storage Pattern**
+- ✅ Roadmaps stored as a field within project documents (not separate collection)
+- ✅ Chat messages stored in subcollections under projects
+- ✅ Progress derived from roadmap data (no separate storage needed)
 
