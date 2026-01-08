@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, Clock, AlertCircle, TrendingUp, Calendar, Loader } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, TrendingUp, Calendar, Loader, BarChart3 } from 'lucide-react';
 import { getRoadmap } from '../services/roadmapService';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -32,14 +32,15 @@ const ProgressView = ({ projectId }) => {
   }, [projectId]);
 
   const calculateProgress = () => {
-    if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases)) {
-      return {
-        overall: 0,
-        phases: [],
-        recentUpdates: [],
-        milestones: [],
-      };
-    }
+    try {
+      if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases)) {
+        return {
+          overall: 0,
+          phases: [],
+          recentUpdates: [],
+          milestones: [],
+        };
+      }
 
     // Count all tasks including sub-tasks
     let totalTasks = 0;
@@ -206,12 +207,21 @@ const ProgressView = ({ projectId }) => {
         completed: phases[index]?.status === 'completed',
       }));
 
-    return {
-      overall,
-      phases,
-      recentUpdates,
-      milestones,
-    };
+      return {
+        overall,
+        phases: Array.isArray(phases) ? phases : [],
+        recentUpdates: Array.isArray(recentUpdates) ? recentUpdates : [],
+        milestones: Array.isArray(milestones) ? milestones : [],
+      };
+    } catch (error) {
+      console.error('Error calculating progress:', error);
+      return {
+        overall: 0,
+        phases: [],
+        recentUpdates: [],
+        milestones: [],
+      };
+    }
   };
 
   const progress = calculateProgress();
@@ -232,6 +242,19 @@ const ProgressView = ({ projectId }) => {
         <h3 className="text-xl font-semibold text-white mb-2">No Roadmap Yet</h3>
         <p className="text-slate-300">
           Generate a roadmap first to track your project progress.
+        </p>
+      </div>
+    );
+  }
+
+  // Safety check: ensure progress data is valid
+  if (!progress || typeof progress.overall !== 'number') {
+    return (
+      <div className="card text-center py-12">
+        <AlertCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">Error Loading Progress</h3>
+        <p className="text-slate-300">
+          Unable to calculate progress. Please try refreshing the page.
         </p>
       </div>
     );
