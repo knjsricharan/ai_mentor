@@ -84,13 +84,21 @@ const RoadmapView = ({ projectId, project }) => {
     }
   };
 
-  const toggleTask = async (phaseId, taskId) => {
+  const toggleTask = async (phaseId, taskId, isSubTask = false, parentTaskId = null) => {
     if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases) || updating) return;
 
     const phase = roadmap.phases.find(p => p?.id === phaseId);
     if (!phase || !phase.tasks || !Array.isArray(phase.tasks)) return;
     
-    const task = phase.tasks.find(t => t?.id === taskId);
+    let task;
+    if (isSubTask && parentTaskId) {
+      const parentTask = phase.tasks.find(t => t?.id === parentTaskId);
+      if (!parentTask || !parentTask.subTasks || !Array.isArray(parentTask.subTasks)) return;
+      task = parentTask.subTasks.find(st => st?.id === taskId);
+    } else {
+      task = phase.tasks.find(t => t?.id === taskId);
+    }
+    
     if (!task) return;
 
     const newCompletedStatus = !task.completed;
@@ -98,7 +106,7 @@ const RoadmapView = ({ projectId, project }) => {
 
     try {
       // Update Firestore - the onSnapshot listener will update the UI
-      await updateTaskStatus(projectId, phaseId, taskId, newCompletedStatus);
+      await updateTaskStatus(projectId, phaseId, taskId, newCompletedStatus, isSubTask, parentTaskId);
     } catch (error) {
       console.error('Error updating task status:', error);
       // Show error to user
@@ -110,18 +118,30 @@ const RoadmapView = ({ projectId, project }) => {
 
   const getProgress = () => {
     if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases)) return 0;
-    const totalTasks = roadmap.phases.reduce((sum, phase) => {
+    
+    // Count all tasks including sub-tasks
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    roadmap.phases.forEach(phase => {
       const tasks = phase?.tasks || [];
-      return sum + (Array.isArray(tasks) ? tasks.length : 0);
-    }, 0);
-    const completedTasks = roadmap.phases.reduce(
-      (sum, phase) => {
-        const tasks = phase?.tasks || [];
-        if (!Array.isArray(tasks)) return sum;
-        return sum + tasks.filter(task => task?.completed).length;
-      },
-      0
-    );
+      if (!Array.isArray(tasks)) return;
+      
+      tasks.forEach(task => {
+        // Count main task
+        totalTasks++;
+        if (task?.completed) completedTasks++;
+        
+        // Count sub-tasks if they exist
+        if (task.subTasks && Array.isArray(task.subTasks)) {
+          task.subTasks.forEach(subTask => {
+            totalTasks++;
+            if (subTask?.completed) completedTasks++;
+          });
+        }
+      });
+    });
+    
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   };
 
@@ -240,13 +260,13 @@ const RoadmapView = ({ projectId, project }) => {
             {roadmap.phases.map((phase, phaseIndex) => {
               const tasks = phase?.tasks || [];
               return (
-              <div key={phase?.id || phaseIndex} className="card group hover:scale-[1.01] transition-all animate-fade-in" style={{ animationDelay: `${phaseIndex * 0.1}s` }}>
+              <div key={phase?.id || phaseIndex} className="card animate-fade-in" style={{ animationDelay: `${phaseIndex * 0.1}s` }}>
                 <div className="flex items-start gap-4 mb-6">
                   <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/30 glow-ring">
                     {phaseIndex + 1}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-200 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-2 transition-colors">
                       {phase?.name || 'Unnamed Phase'}
                     </h3>
                     <p className="text-slate-300 leading-relaxed">{phase?.description || ''}</p>
@@ -256,42 +276,106 @@ const RoadmapView = ({ projectId, project }) => {
                 {/* Enhanced Task List */}
                 <div className="space-y-2 ml-18">
                   {Array.isArray(tasks) && tasks.map((task, taskIndex) => (
-                <div
-                  key={task?.id || `task-${Math.random()}`}
-                  className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer group/task ${
-                    task?.completed 
-                      ? 'bg-primary-500/5 hover:bg-primary-500/10 border border-primary-500/20'
-                      : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
-                  }`}
-                  onClick={() => !updating && phase?.id && task?.id && toggleTask(phase.id, task.id)}
-                  style={{ animationDelay: `${taskIndex * 0.05}s` }}
-                >
-                  <div className="flex-shrink-0">
-                    {task?.completed ? (
-                      <CheckCircle className="w-6 h-6 text-primary-300 group-hover/task:scale-110 transition-transform" />
-                    ) : (
-                      <Circle className="w-6 h-6 text-slate-500 group-hover/task:text-slate-400 transition-colors" />
-                    )}
-                  </div>
-                  <span
-                    className={`flex-1 text-base ${
-                      task?.completed
-                        ? 'text-slate-400 line-through'
-                        : 'text-white font-medium'
-                    }`}
-                  >
-                    {task?.name || 'Unnamed Task'}
-                  </span>
-                  {!task?.completed && (
-                    <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center opacity-0 group-hover/task:opacity-100 transition-opacity">
-                      <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    <div key={task?.id || `task-${Math.random()}`} className="space-y-2">
+                      {/* Main Task */}
+                      <div
+                        className={`flex items-center gap-3 p-4 rounded-xl transition-all group/task ${
+                          task?.completed 
+                            ? 'bg-primary-500/5 hover:bg-primary-500/10 border border-primary-500/20 hover:border-primary-500/30'
+                            : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
+                        }`}
+                        onMouseEnter={(e) => e.stopPropagation()}
+                        style={{ animationDelay: `${taskIndex * 0.05}s` }}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!updating && phase?.id && task?.id) {
+                              toggleTask(phase.id, task.id);
+                            }
+                          }}
+                          className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-1 -m-1 transition-transform hover:scale-110"
+                          disabled={updating}
+                          aria-label={task?.completed ? 'Mark task as incomplete' : 'Mark task as complete'}
+                        >
+                          {task?.completed ? (
+                            <CheckCircle className="w-6 h-6 text-primary-300 transition-transform" />
+                          ) : (
+                            <Circle className="w-6 h-6 text-slate-500 group-hover/task:text-slate-400 transition-colors" />
+                          )}
+                        </button>
+                        <span
+                          className={`flex-1 text-base ${
+                            task?.completed
+                              ? 'text-slate-400 line-through'
+                              : 'text-white font-medium'
+                          }`}
+                        >
+                          {task?.name || 'Unnamed Task'}
+                          {task?.role && (
+                            <span className="ml-2 text-xs text-slate-400 font-normal">({task.role})</span>
+                          )}
+                        </span>
+                        {!task?.completed && (
+                          <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center opacity-0 group-hover/task:opacity-100 transition-opacity">
+                            <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Sub-Tasks */}
+                      {task?.subTasks && Array.isArray(task.subTasks) && task.subTasks.length > 0 && (
+                        <div className="ml-8 space-y-1.5">
+                          {task.subTasks.map((subTask, subTaskIndex) => (
+                            <div
+                              key={subTask?.id || `subtask-${Math.random()}`}
+                              className={`flex items-center gap-3 p-3 rounded-lg transition-all group/subtask ${
+                                subTask?.completed 
+                                  ? 'bg-primary-500/3 hover:bg-primary-500/8 border border-primary-500/15'
+                                  : 'bg-white/3 hover:bg-white/8 border border-white/5'
+                              }`}
+                              onMouseEnter={(e) => e.stopPropagation()}
+                              style={{ animationDelay: `${(taskIndex * 0.05) + (subTaskIndex * 0.02)}s` }}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!updating && phase?.id && subTask?.id && task?.id) {
+                                    toggleTask(phase.id, subTask.id, true, task.id);
+                                  }
+                                }}
+                                className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-1 -m-1 transition-transform hover:scale-110"
+                                disabled={updating}
+                                aria-label={subTask?.completed ? 'Mark sub-task as incomplete' : 'Mark sub-task as complete'}
+                              >
+                                {subTask?.completed ? (
+                                  <CheckCircle className="w-5 h-5 text-primary-300 transition-transform" />
+                                ) : (
+                                  <Circle className="w-5 h-5 text-slate-500 group-hover/subtask:text-slate-400 transition-colors" />
+                                )}
+                              </button>
+                              <span
+                                className={`flex-1 text-sm ${
+                                  subTask?.completed
+                                    ? 'text-slate-500 line-through'
+                                    : 'text-slate-300'
+                                }`}
+                              >
+                                {subTask?.name || 'Unnamed Sub-Task'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
           </div>
             );
             })}

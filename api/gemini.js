@@ -166,42 +166,97 @@ Be conversational, helpful, and focused. Ask one question at a time.`;
       return res.status(200).json({ response: aiResponse.trim() });
 
     } else if (type === 'roadmap') {
-      // Roadmap generation
-      systemPrompt = `You are an AI assistant generating a project roadmap.
+      // Enhanced roadmap generation with HDLC structure
+      const teamSize = projectData.teamSize ? parseInt(projectData.teamSize) : 1;
+      const isTeamProject = teamSize > 1;
+      
+      systemPrompt = `You are an expert software development architect generating a professional, industry-grade project roadmap.
 
 Project Information:
 ${projectContext}
 
 ${chatHistory.length > 0 ? `\nConversation Context:\n${chatHistory.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n')}` : ''}
 
-Generate a structured roadmap with 3-5 phases. Each phase should have:
-- id: unique identifier (e.g., "1", "2", "3")
-- name: phase name
-- description: brief description
-- tasks: array of tasks, each with:
-  - id: unique identifier (e.g., "1-1", "1-2")
-  - name: task name
-  - completed: false
+CRITICAL REQUIREMENTS:
 
-Return ONLY valid JSON in this exact format:
+1. ROADMAP STRUCTURE - MUST follow HDLC (High-Level Development Life Cycle):
+   The roadmap MUST have exactly 6 phases in this order:
+   - Phase 1: Requirement Analysis
+   - Phase 2: System Design
+   - Phase 3: Implementation / Development
+   - Phase 4: Testing & Validation
+   - Phase 5: Deployment
+   - Phase 6: Maintenance & Improvements
+
+2. TASK SPECIFICITY - Tasks must be:
+   - SPECIFIC and ACTIONABLE (not generic)
+   - Realistic and industry-standard
+   - Include technical details relevant to the tech stack
+   
+   ❌ BAD: "Work on backend", "Set up database", "Create UI"
+   ✅ GOOD: "Design Firestore schema for user authentication and project data collections", "Implement Firebase Auth with email/password and Google OAuth providers", "Build responsive onboarding wizard component with form validation"
+
+3. TEAM-AWARE DISTRIBUTION:
+${isTeamProject ? `   Team Size: ${teamSize} members
+   - Split tasks by role (Backend Developer, Frontend Developer, DevOps Engineer, QA Engineer, etc.)
+   - Each task should specify WHO does it (role-based, not names)
+   - Example format: "Backend Developer: Implement REST API endpoints for user authentication"
+   - Distribute work evenly across team members
+   - Include collaboration tasks where multiple roles work together` : `   Team Size: Solo developer
+   - Assign tasks directly without role splitting
+   - Tasks should be scoped for a single developer
+   - Example: "Implement Firebase Auth authentication flow"`}
+
+4. SUB-TASK BREAKDOWN:
+   - Each main task can have sub-tasks for complex work
+   - Sub-tasks should be nested under main tasks
+   - Format: Use "subTasks" array within tasks
+
+5. PHASE DETAILS:
+   Each phase must have:
+   - Clear objective explaining the phase purpose
+   - 4-8 main tasks (more for Implementation phase, fewer for others)
+   - Tasks should build logically on previous phases
+
+JSON FORMAT ${isTeamProject ? '(with team roles)' : '(solo developer)'}:
 {
   "phases": [
     {
       "id": "1",
-      "name": "Phase Name",
-      "description": "Phase description",
+      "name": "Requirement Analysis",
+      "description": "Gather and analyze project requirements, define scope, and establish success criteria",
       "tasks": [
         {
           "id": "1-1",
-          "name": "Task name",
-          "completed": false
+          "name": "${isTeamProject ? 'Product Manager: ' : ''}Conduct stakeholder interviews and document functional requirements",
+          "completed": false${isTeamProject ? ',\n          "role": "Product Manager"' : ''}
+        },
+        {
+          "id": "1-2",
+          "name": "${isTeamProject ? 'Technical Lead: ' : ''}Analyze technical feasibility and identify technology constraints",
+          "completed": false${isTeamProject ? ',\n          "role": "Technical Lead"' : ''},
+          "subTasks": [
+            {
+              "id": "1-2-1",
+              "name": "Evaluate framework capabilities",
+              "completed": false
+            }
+          ]
         }
       ]
     }
   ]
 }
 
-Do not include any markdown, code blocks, or extra text. Only return the JSON object.`;
+IMPORTANT:
+- Return ONLY valid JSON, no markdown or code blocks
+- Ensure all IDs are unique
+- All tasks must have completed: false
+- Make tasks realistic and specific to the project's tech stack: ${projectData.techStack?.join(', ') || 'Not specified'}
+- Consider project domain: ${projectData.domain || 'Not specified'}
+- Timeline consideration: ${projectData.targetDate || 'Not specified'}
+
+Generate a comprehensive, professional roadmap that reflects real industry software development practices.`;
 
       const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
         method: 'POST',
@@ -244,12 +299,33 @@ Do not include any markdown, code blocks, or extra text. Only return the JSON ob
         throw new Error('Failed to parse roadmap JSON from AI response');
       }
       
-      // Validate and ensure all tasks have completed: false
+      // Validate and ensure all phases, tasks, and sub-tasks have proper structure
       if (roadmap.phases && Array.isArray(roadmap.phases)) {
-        roadmap.phases.forEach(phase => {
+        roadmap.phases.forEach((phase, phaseIndex) => {
+          // Ensure phase has an ID
+          if (!phase.id) {
+            phase.id = String(phaseIndex + 1);
+          }
+          
           if (phase.tasks && Array.isArray(phase.tasks)) {
-            phase.tasks.forEach(task => {
+            phase.tasks.forEach((task, taskIndex) => {
+              // Ensure task has an ID
+              if (!task.id) {
+                task.id = `${phase.id}-${taskIndex + 1}`;
+              }
+              
+              // Ensure completed is false
               task.completed = false;
+              
+              // Validate and ensure sub-tasks have proper structure
+              if (task.subTasks && Array.isArray(task.subTasks)) {
+                task.subTasks.forEach((subTask, subTaskIndex) => {
+                  if (!subTask.id) {
+                    subTask.id = `${task.id}-${subTaskIndex + 1}`;
+                  }
+                  subTask.completed = false;
+                });
+              }
             });
           }
         });

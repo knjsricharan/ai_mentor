@@ -44,7 +44,7 @@ export const saveRoadmap = async (projectId, roadmap) => {
   }
 };
 
-export const updateTaskStatus = async (projectId, phaseId, taskId, completed) => {
+export const updateTaskStatus = async (projectId, phaseId, taskId, completed, isSubTask = false, parentTaskId = null) => {
   try {
     if (!projectId || !phaseId || !taskId) {
       throw new Error('Project ID, phase ID, and task ID are required');
@@ -68,6 +68,48 @@ export const updateTaskStatus = async (projectId, phaseId, taskId, completed) =>
       return {
         ...phase,
         tasks: tasks.map(task => {
+          // Handle sub-task updates
+          if (isSubTask && parentTaskId && task.id === parentTaskId) {
+            const subTasks = task.subTasks || [];
+            if (!Array.isArray(subTasks)) return task;
+            
+            const updatedSubTasks = subTasks.map(subTask => {
+              if (!subTask || subTask.id !== taskId) return subTask;
+              
+              const updatedSubTask = {
+                ...subTask,
+                completed,
+              };
+              if (completed) {
+                updatedSubTask.completedAt = Timestamp.now();
+              } else {
+                const { completedAt, ...subTaskWithoutTimestamp } = updatedSubTask;
+                return subTaskWithoutTimestamp;
+              }
+              return updatedSubTask;
+            });
+            
+            // Auto-complete parent task if all sub-tasks are completed
+            const allSubTasksCompleted = updatedSubTasks.every(st => st.completed);
+            
+            const updatedTask = {
+              ...task,
+              subTasks: updatedSubTasks,
+            };
+            
+            if (allSubTasksCompleted && !task.completed) {
+              updatedTask.completed = true;
+              updatedTask.completedAt = Timestamp.now();
+            } else if (!allSubTasksCompleted && task.completed) {
+              // If any sub-task is incomplete, parent should be incomplete
+              const { completedAt, ...taskWithoutTimestamp } = updatedTask;
+              return taskWithoutTimestamp;
+            }
+            
+            return updatedTask;
+          }
+          
+          // Handle main task updates
           if (!task || task.id !== taskId) return task;
           
           const updatedTask = {

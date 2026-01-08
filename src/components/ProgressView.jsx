@@ -41,22 +41,61 @@ const ProgressView = ({ projectId }) => {
       };
     }
 
-    const allTasks = roadmap.phases
-      .filter(phase => phase && Array.isArray(phase.tasks))
-      .flatMap(phase => phase.tasks.filter(task => task != null));
-    const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter(task => task?.completed).length;
+    // Count all tasks including sub-tasks
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    roadmap.phases.forEach(phase => {
+      const tasks = phase?.tasks || [];
+      if (!Array.isArray(tasks)) return;
+      
+      tasks.forEach(task => {
+        if (task == null) return;
+        // Count main task
+        totalTasks++;
+        if (task?.completed) completedTasks++;
+        
+        // Count sub-tasks if they exist
+        if (task.subTasks && Array.isArray(task.subTasks)) {
+          task.subTasks.forEach(subTask => {
+            if (subTask != null) {
+              totalTasks++;
+              if (subTask?.completed) completedTasks++;
+            }
+          });
+        }
+      });
+    });
+    
     const overall = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     const phases = roadmap.phases
       .filter(phase => phase != null)
       .map(phase => {
         const phaseTasks = phase?.tasks || [];
-        const phaseTotal = Array.isArray(phaseTasks) ? phaseTasks.length : 0;
-        const phaseCompleted = Array.isArray(phaseTasks) 
-          ? phaseTasks.filter(task => task?.completed).length 
-          : 0;
-      const progress = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
+        let phaseTotal = 0;
+        let phaseCompleted = 0;
+        
+        if (Array.isArray(phaseTasks)) {
+          phaseTasks.forEach(task => {
+            if (task == null) return;
+            // Count main task
+            phaseTotal++;
+            if (task?.completed) phaseCompleted++;
+            
+            // Count sub-tasks if they exist
+            if (task.subTasks && Array.isArray(task.subTasks)) {
+              task.subTasks.forEach(subTask => {
+                if (subTask != null) {
+                  phaseTotal++;
+                  if (subTask?.completed) phaseCompleted++;
+                }
+              });
+            }
+          });
+        }
+        
+        const progress = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
       
       let status = 'pending';
       if (progress === 100) {
@@ -111,11 +150,15 @@ const ProgressView = ({ projectId }) => {
     const recentUpdates = roadmap.phases
       .filter(phase => phase != null && Array.isArray(phase.tasks))
       .flatMap(phase => 
-        phase.tasks
-          .filter(task => task != null && task.completed)
-          .map(task => {
+        phase.tasks.flatMap(task => {
+          if (task == null) return [];
+          
+          const updates = [];
+          
+          // Add main task if completed
+          if (task.completed) {
             const completedAt = task.completedAt ? convertTimestamp(task.completedAt) : null;
-            return {
+            updates.push({
               id: `${phase?.id || 'phase'}-${task?.id || 'task'}`,
               task: task?.name || 'Unnamed Task',
               phase: phase?.name || 'Unnamed Phase',
@@ -123,8 +166,29 @@ const ProgressView = ({ projectId }) => {
               timestamp: completedAt,
               timestampIST: formatToIST(completedAt),
               member: 'You',
-            };
-          })
+            });
+          }
+          
+          // Add sub-tasks if completed
+          if (task.subTasks && Array.isArray(task.subTasks)) {
+            task.subTasks.forEach(subTask => {
+              if (subTask != null && subTask.completed) {
+                const completedAt = subTask.completedAt ? convertTimestamp(subTask.completedAt) : null;
+                updates.push({
+                  id: `${phase?.id || 'phase'}-${subTask?.id || 'subtask'}`,
+                  task: `${task?.name || 'Task'} → ${subTask?.name || 'Sub-Task'}`,
+                  phase: phase?.name || 'Unnamed Phase',
+                  status: 'completed',
+                  timestamp: completedAt,
+                  timestampIST: formatToIST(completedAt),
+                  member: 'You',
+                });
+              }
+            });
+          }
+          
+          return updates;
+        })
       )
       .sort((a, b) => {
         if (!a.timestamp && !b.timestamp) return 0;
