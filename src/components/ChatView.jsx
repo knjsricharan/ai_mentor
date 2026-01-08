@@ -149,82 +149,97 @@ const ChatView = ({ projectId, project }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)]">
+    <div className="flex flex-col h-[calc(100vh-250px)] text-slate-100">
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 flex items-center gap-2">
+        <div className="mb-4 p-4 bg-red-500/10 border border-red-400/30 rounded-xl text-red-200 flex items-center gap-2 animate-slide-in-left">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
       
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-white rounded-2xl shadow-lg">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            {message.role === 'model' && (
-              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-            )}
+      {/* Enhanced Chat Container */}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-6 bg-dark-800/70 border border-white/5 rounded-2xl shadow-[0_20px_80px_-55px_rgba(0,230,200,0.4)] backdrop-blur-xl relative group">
+        {/* Subtle background gradient effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        
+        <div className="relative z-10">
+          {messages.map((message, index) => (
             <div
-              className={`max-w-[70%] rounded-2xl p-4 ${
-                message.role === 'user'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 text-gray-900'
+              key={message.id}
+              className={`flex gap-3 mb-4 animate-fade-in ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               }`}
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              <p
-                className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-primary-100' : 'text-gray-500'
+              {message.role === 'model' && (
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30 glow-ring">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div
+                className={`max-w-[70%] rounded-2xl p-4 border transition-all duration-300 ${
+                  message.role === 'user'
+                    ? 'bg-gradient-to-br from-primary-500/90 to-accent-500/70 text-white border-primary-400/30 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40'
+                    : 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
-                {message.timestamp instanceof Date
-                  ? message.timestamp.toLocaleTimeString()
-                  : new Date(message.timestamp).toLocaleTimeString()}
-              </p>
-            </div>
-            {message.role === 'user' && (
-              <div className="flex-shrink-0 w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-600" />
+                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                <p
+                  className={`text-xs mt-2 ${
+                    message.role === 'user' ? 'text-primary-100' : 'text-slate-400'
+                  }`}
+                >
+                  {message.timestamp instanceof Date
+                    ? message.timestamp.toLocaleTimeString()
+                    : new Date(message.timestamp).toLocaleTimeString()}
+                </p>
               </div>
-            )}
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
+              {message.role === 'user' && (
+                <div className="flex-shrink-0 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-slate-200" />
+                </div>
+              )}
             </div>
-            <div className="bg-gray-100 rounded-2xl p-4">
-              <Loader className="w-5 h-5 text-primary-500 animate-spin" />
-            </div>
-          </div>
-        )}
+          ))}
 
-        <div ref={messagesEndRef} />
+          {loading && (
+            <div className="flex gap-3 justify-start animate-slide-in-left">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30 glow-ring animate-pulse">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <Loader className="w-5 h-5 text-primary-500 animate-spin" />
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your AI mentor anything..."
-          className="flex-1 input-field"
-          disabled={loading}
-        />
+      {/* Enhanced Input Form */}
+      <form onSubmit={handleSend} className="flex gap-3 relative">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask your AI mentor anything..."
+            className="input-field pr-12"
+            disabled={loading}
+          />
+          {input && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+          )}
+        </div>
         <button
           type="submit"
           disabled={!input.trim() || loading}
-          className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
         >
-          <Send className="w-5 h-5" />
+          <Send className={`w-5 h-5 transition-transform ${
+            !loading && input.trim() ? 'group-hover:translate-x-1' : ''
+          }`} />
           Send
         </button>
       </form>

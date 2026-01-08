@@ -68,9 +68,9 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="glass-panel shadow-[0_25px_90px_-50px_rgba(0,230,200,0.55)] max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
               src="/logo.jpeg" 
@@ -78,28 +78,28 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
               className="w-8 h-8 object-contain rounded-lg"
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Complete your project details</h2>
-              <p className="text-sm text-gray-500 mt-1">You can edit these anytime later</p>
+              <h2 className="text-2xl font-bold text-white">Complete your project details</h2>
+              <p className="text-sm text-slate-300 mt-1">You can edit these anytime later</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-slate-300" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-700">
+            <div className="mb-4 p-4 bg-red-500/10 border border-red-400/30 rounded-xl text-red-200">
               {error}
             </div>
           )}
 
           <div className="space-y-6">
             <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-semibold text-slate-200 mb-2">
                 Short Project Description
               </label>
               <textarea
@@ -113,7 +113,7 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
             </div>
 
             <div>
-              <label htmlFor="teamSize" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="teamSize" className="block text-sm font-semibold text-slate-200 mb-2">
                 Team Size
               </label>
               <input
@@ -130,7 +130,7 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
             </div>
 
             <div>
-              <label htmlFor="targetDate" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="targetDate" className="block text-sm font-semibold text-slate-200 mb-2">
                 Target Completion Date
               </label>
               <div className="relative">
@@ -143,15 +143,15 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
                   className="input-field pl-10"
                   min={new Date().toISOString().split('T')[0]}
                 />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
                 Tech Stack
               </label>
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-3 border border-gray-200 rounded-xl">
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-3 border border-white/10 rounded-xl bg-white/5">
                 {TECH_STACK_OPTIONS.map((tech) => (
                   <button
                     key={tech}
@@ -159,8 +159,8 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
                     onClick={() => toggleTechStack(tech)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       formData.techStack.includes(tech)
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
+                        : 'bg-white/10 text-slate-200 hover:bg-white/20'
                     }`}
                   >
                     {tech}
@@ -168,7 +168,7 @@ const ProjectDetailsPopup = ({ project, onClose, onSave, onSkip }) => {
                 ))}
               </div>
               {formData.techStack.length > 0 && (
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-slate-300">
                   Selected: {formData.techStack.join(', ')}
                 </p>
               )}

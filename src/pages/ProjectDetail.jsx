@@ -59,10 +59,10 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
+        <div className="text-center text-slate-200">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading project...</p>
+          <p className="mt-4 text-slate-300">Loading project...</p>
         </div>
       </div>
     );
@@ -70,9 +70,9 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Project not found</p>
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
+        <div className="text-center text-slate-200">
+          <p className="text-slate-300 mb-4">Project not found</p>
           <button onClick={() => navigate('/dashboard')} className="btn-primary">
             Back to Dashboard
           </button>
@@ -129,27 +129,35 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-dark-900 via-[#0b1729] to-[#0a0f1a] text-slate-100 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute w-96 h-96 bg-primary-500/20 rounded-full blur-3xl top-40 -left-20 animate-pulse-slow" />
+        <div className="absolute w-96 h-96 bg-accent-500/20 rounded-full blur-3xl bottom-40 -right-20 animate-pulse-slow" style={{ animationDelay: '1.5s' }} />
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="bg-dark-900/70 backdrop-blur-xl border-b border-white/5 shadow-[0_15px_60px_-45px_rgba(0,230,200,0.45)] sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 relative">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/5 rounded-lg transition-all hover:scale-110 hover:glow-ring"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                <ArrowLeft className="w-5 h-5 text-slate-300" />
               </button>
               <div className="flex items-center gap-3">
-                <img 
-                  src="/logo.jpeg" 
-                  alt="CereBro AI" 
-                  className="w-8 h-8 object-contain rounded-lg"
-                />
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-xl flex items-center justify-center glow-ring">
+                  <img 
+                    src="/logo.jpeg" 
+                    alt="CereBro AI" 
+                    className="w-8 h-8 object-contain rounded-lg"
+                  />
+                </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-                  <p className="text-sm text-gray-600">
+                  <h1 className="text-2xl font-bold text-white">{project.name}</h1>
+                  <p className="text-sm text-slate-300">
                     {project.description || 'No description yet'}
                   </p>
                 </div>
@@ -158,15 +166,15 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowSettingsModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/5 rounded-lg transition-all group"
                 title="Project Settings"
               >
-                <Settings className="w-5 h-5 text-gray-600" />
+                <Settings className="w-5 h-5 text-slate-300 group-hover:text-primary-300 group-hover:rotate-90 transition-all" />
               </button>
               <span className={`px-4 py-2 rounded-full text-sm font-medium ${
                 project.status === 'active'
-                  ? 'bg-success-100 text-success-700'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-primary-100 border border-primary-400/30 glow-ring'
+                  : 'bg-white/5 text-slate-200 border border-white/10'
               }`}>
                 {project.status}
               </span>
@@ -174,19 +182,26 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-gray-200">
-            {tabs.map((tab) => (
+          <div className="flex gap-2 border-b border-white/5">
+            {tabs.map((tab, index) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 font-semibold transition-colors border-b-2 ${
+                className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 relative group ${
                   activeTab === tab.id
-                    ? 'text-primary-600 border-primary-600'
-                    : 'text-gray-600 border-transparent hover:text-gray-900'
+                    ? 'text-primary-200 border-primary-400'
+                    : 'text-slate-400 border-transparent hover:text-white'
                 }`}
               >
-                {tab.icon}
+                <div className={`transition-all ${
+                  activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'
+                }`}>
+                  {tab.icon}
+                </div>
                 {tab.label}
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-500 to-accent-500 glow-teal" />
+                )}
               </button>
             ))}
           </div>
@@ -194,10 +209,12 @@ const ProjectDetail = ({ projects = [], setProjects }) => {
       </header>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {activeTab === 'chat' && project && <ChatView projectId={projectId} project={project} />}
-        {activeTab === 'roadmap' && project && <RoadmapView projectId={projectId} project={project} />}
-        {activeTab === 'progress' && <ProgressView projectId={projectId} />}
+      <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
+        <div className="animate-fade-in">
+          {activeTab === 'chat' && project && <ChatView projectId={projectId} project={project} />}
+          {activeTab === 'roadmap' && project && <RoadmapView projectId={projectId} project={project} />}
+          {activeTab === 'progress' && <ProgressView projectId={projectId} />}
+        </div>
       </main>
 
       {/* Project Details Popup */}

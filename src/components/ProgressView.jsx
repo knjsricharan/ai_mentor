@@ -156,7 +156,7 @@ const ProgressView = ({ projectId }) => {
     return (
       <div className="text-center py-12">
         <Loader className="w-12 h-12 text-primary-500 animate-spin mx-auto mb-4" />
-        <p className="text-gray-600">Loading progress...</p>
+        <p className="text-slate-300">Loading progress...</p>
       </div>
     );
   }
@@ -164,9 +164,9 @@ const ProgressView = ({ projectId }) => {
   if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases) || roadmap.phases.length === 0) {
     return (
       <div className="card text-center py-12">
-        <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Roadmap Yet</h3>
-        <p className="text-gray-600">
+        <AlertCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">No Roadmap Yet</h3>
+        <p className="text-slate-300">
           Generate a roadmap first to track your project progress.
         </p>
       </div>
@@ -180,119 +180,163 @@ const ProgressView = ({ projectId }) => {
       case 'in-progress':
         return <Clock className="w-5 h-5 text-primary-500" />;
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-400" />;
+        return <AlertCircle className="w-5 h-5 text-slate-400" />;
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="card bg-gradient-to-br from-primary-50 to-accent-50">
-        <div className="flex items-center justify-between mb-4">
+      {/* Enhanced Overall Progress Card */}
+      <div className="card bg-gradient-to-br from-primary-500/10 via-dark-800/60 to-accent-500/10 border border-primary-400/20 hover:border-primary-400/40 transition-all group neural-bg">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Overall Progress</h2>
-            <p className="text-gray-600">Track your project completion</p>
+            <h2 className="text-3xl font-bold text-white mb-2">Overall Progress</h2>
+            <p className="text-slate-300 text-lg">Track your project completion</p>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-bold text-primary-600">{progress.overall}%</div>
-            <div className="flex items-center gap-1 text-success-600 text-sm">
-              <TrendingUp className="w-4 h-4" />
+            <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-accent-300 animate-gradient-shift">
+              {progress.overall}%
+            </div>
+            <div className="flex items-center justify-end gap-2 text-primary-200 text-base mt-2">
+              <TrendingUp className="w-5 h-5" />
               On Track
             </div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-6">
+        <div className="w-full bg-white/10 rounded-full h-8 relative overflow-hidden shadow-inner">
           <div
-            className="bg-gradient-to-r from-primary-500 to-accent-500 h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+            className="bg-gradient-to-r from-primary-500 via-primary-400 to-accent-500 h-8 rounded-full transition-all duration-500 flex items-center justify-end pr-4 relative"
             style={{ width: `${progress.overall}%` }}
           >
-            <span className="text-white text-xs font-semibold">{progress.overall}%</span>
+            <span className="text-white text-sm font-bold">{progress.overall}%</span>
+            {/* Animated shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-gradient" />
           </div>
         </div>
       </div>
 
+      {/* Enhanced Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Phase Progress</h3>
-          <div className="space-y-4">
+        {/* Phase Progress Card */}
+        <div className="card group hover:scale-[1.01] transition-all">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-xl flex items-center justify-center glow-ring">
+              <BarChart3 className="w-6 h-6 text-primary-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">Phase Progress</h3>
+          </div>
+          <div className="space-y-5">
             {progress.phases.map((phase, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-900">{phase.name}</span>
-                  <span className="text-sm text-gray-600">{phase.progress}%</span>
+              <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold text-white text-lg">{phase.name}</span>
+                  <span className={`text-base font-bold ${
+                    phase.status === 'completed' ? 'text-primary-300' : 'text-slate-300'
+                  }`}>{phase.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-white/10 rounded-full h-3 relative overflow-hidden">
                   <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
+                    className={`h-3 rounded-full transition-all duration-500 relative ${
                       phase.status === 'completed'
-                        ? 'bg-success-500'
+                        ? 'bg-gradient-to-r from-primary-400 to-primary-500'
                         : phase.status === 'in-progress'
-                        ? 'bg-primary-500'
-                        : 'bg-gray-300'
+                        ? 'bg-gradient-to-r from-primary-500 to-accent-500'
+                        : 'bg-white/10'
                     }`}
                     style={{ width: `${phase.progress}%` }}
-                  />
+                  >
+                    {phase.status === 'in-progress' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-gradient" />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="card">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Updates</h3>
+        {/* Recent Updates Card */}
+        <div className="card group hover:scale-[1.01] transition-all">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-success-500/20 to-success-600/10 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-success-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">Recent Updates</h3>
+          </div>
           <div className="space-y-3">
-            {progress.recentUpdates.map((update) => (
-              <div
-                key={update.id}
-                className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
-              >
-                {getStatusIcon(update.status)}
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{update.task}</p>
-                  <p className="text-sm text-gray-600">
-                    {update.member} • {update.timestampIST}
-                  </p>
+            {progress.recentUpdates.length > 0 ? (
+              progress.recentUpdates.map((update, index) => (
+                <div
+                  key={update.id}
+                  className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-primary-400/30 transition-all group/item animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="flex-shrink-0">
+                    {getStatusIcon(update.status)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-white mb-1">{update.task}</p>
+                    <p className="text-sm text-slate-300">
+                      {update.member} • {update.timestampIST}
+                    </p>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No completed tasks yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
 
-      <div className="card">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary-600" />
-          Project Milestones
-        </h3>
-        <div className="space-y-4">
+      {/* Enhanced Milestones Card */}
+      <div className="card group hover:scale-[1.01] transition-all neural-bg">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-accent-500/20 to-accent-600/10 rounded-xl flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-accent-300" />
+          </div>
+          <h3 className="text-2xl font-bold text-white">Project Milestones</h3>
+        </div>
+        <div className="space-y-5">
           {progress.milestones.map((milestone, index) => (
-            <div key={index} className="flex items-center gap-4">
+            <div key={index} className="flex items-center gap-5 group/milestone animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
               <div
-                className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all ${
                   milestone.completed
-                    ? 'bg-success-500 text-white'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-gradient-to-br from-primary-500 to-accent-500 shadow-lg shadow-primary-500/30 glow-ring'
+                    : 'bg-white/10 border-2 border-white/20 group-hover/milestone:border-primary-400/40'
                 }`}
               >
                 {milestone.completed ? (
-                  <CheckCircle className="w-6 h-6" />
+                  <CheckCircle className="w-7 h-7 text-white" />
                 ) : (
-                  <span className="font-bold">{index + 1}</span>
+                  <span className="font-bold text-slate-300 text-lg">{index + 1}</span>
                 )}
               </div>
               <div className="flex-1">
                 <p
-                  className={`font-semibold ${
-                    milestone.completed ? 'text-gray-500 line-through' : 'text-gray-900'
+                  className={`font-semibold text-lg ${
+                    milestone.completed ? 'text-slate-400 line-through' : 'text-white'
                   }`}
                 >
                   {milestone.name}
                 </p>
                 {milestone.date && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-400 mt-1">
                     Target: {milestone.date instanceof Date ? milestone.date.toLocaleDateString() : new Date(milestone.date).toLocaleDateString()}
                   </p>
                 )}
               </div>
+              {milestone.completed && (
+                <div className="flex-shrink-0">
+                  <div className="px-3 py-1 rounded-full bg-primary-500/20 text-primary-200 text-xs font-medium border border-primary-500/30">
+                    Completed
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

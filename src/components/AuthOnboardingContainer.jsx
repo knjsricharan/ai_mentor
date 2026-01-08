@@ -139,31 +139,27 @@ const AuthOnboardingContainer = ({
 
   const backgroundStyle = {
     backgroundImage: `
-      radial-gradient(circle at 50% 0%, rgba(79,70,229,0.18), transparent 55%),
-      radial-gradient(circle at 100% 100%, rgba(124,58,237,0.16), transparent 60%),
-      linear-gradient(rgba(79,70,229,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(79,70,229,0.05) 1px, transparent 1px),
-      linear-gradient(180deg, #f5f7fb 0%, #eef1f7 100%)
+      radial-gradient(circle at 20% 20%, rgba(0,230,200,0.12), transparent 35%),
+      radial-gradient(circle at 80% 0%, rgba(105,56,239,0.14), transparent 40%),
+      linear-gradient(120deg, rgba(0,230,200,0.06), rgba(105,56,239,0.08)),
+      linear-gradient(180deg, #0b1120 0%, #0a0f1a 50%, #080c16 100%)
     `,
     backgroundSize: `
       auto,
       auto,
-      40px 40px,
-      40px 40px,
+      140% 140%,
       100% 100%
     `,
     backgroundPosition: `
-      top center,
-      bottom right,
-      0 0,
+      center,
+      top right,
       0 0,
       0 0
     `,
     backgroundRepeat: `
       no-repeat,
       no-repeat,
-      repeat,
-      repeat,
+      no-repeat,
       no-repeat
     `
   };
@@ -176,7 +172,7 @@ const AuthOnboardingContainer = ({
       >
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-slate-300">Loading...</p>
         </div>
       </div>
     );
@@ -184,13 +180,17 @@ const AuthOnboardingContainer = ({
 
   return (
     <div 
-      className="h-screen w-screen overflow-hidden"
+      className="h-screen w-screen overflow-hidden relative"
       style={backgroundStyle}
     >
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_30%_30%,rgba(0,230,200,0.08),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(105,56,239,0.08),transparent_30%)]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/5 mix-blend-overlay" />
+
       {(currentView === 'onboarding' || currentView === 'auth') && (
         <div className="h-full w-full flex items-center justify-center p-4">
-          <div className="w-full max-w-[560px] h-[420px] bg-white rounded-[18px] shadow-xl flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden px-6 py-4">
+          <div className="w-full max-w-[640px] h-[460px] glass-panel shadow-[0_20px_80px_-40px_rgba(0,230,200,0.55)] flex flex-col overflow-hidden relative">
+            <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_20%_20%,rgba(0,230,200,0.12),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(105,56,239,0.15),transparent_40%)]" />
+            <div className="flex-1 overflow-hidden px-8 py-6 relative z-10">
               {currentView === 'onboarding' && (
                 <OnboardingWizard onComplete={handleOnboardingComplete} />
               )}
@@ -213,13 +213,14 @@ const AuthOnboardingContainer = ({
           }}
         >
           <h1 
-            className="text-6xl" 
+            className="text-6xl text-center font-semibold tracking-tight" 
             style={{ 
-              letterSpacing: '0.02em',
-              color: '#818cf8'
+              letterSpacing: '0.02em'
             }}
           >
-            Welcome to <span className="font-bold">CereBro</span> <span className="font-normal">AI</span>
+            <span className="gradient-text">Welcome to</span>{' '}
+            <span className="text-white">CereBro</span>{' '}
+            <span className="text-primary-300">AI</span>
           </h1>
         </div>
       )}
@@ -234,13 +235,12 @@ const AuthOnboardingContainer = ({
           }}
         >
           <h2 
-            className="text-6xl font-bold" 
+            className="text-6xl font-bold text-center" 
             style={{ 
-              letterSpacing: '0.01em',
-              color: '#818cf8'
+              letterSpacing: '0.01em'
             }}
           >
-            Please complete your profile
+            <span className="gradient-text">Please complete your profile</span>
           </h2>
         </div>
       )}
@@ -261,14 +261,14 @@ const AuthOnboardingContainer = ({
           <div className="min-h-screen flex items-center justify-center py-12 px-4">
             <div className="w-full max-w-2xl">
               <div className="mb-8 text-center">
-                <h1 className="text-4xl font-bold mb-2" style={{ color: '#6366f1' }}>
+                <h1 className="text-4xl font-bold mb-2 gradient-text">
                   Complete Your Profile
                 </h1>
-                <p className="text-lg" style={{ color: '#6b7280' }}>
+                <p className="text-lg text-slate-300">
                   Help us get to know you better
                 </p>
               </div>
-              <div className="bg-white rounded-[18px] shadow-xl p-8">
+              <div className="glass-panel shadow-[0_20px_80px_-45px_rgba(0,230,200,0.45)] p-8">
                 <ProfileForm onSubmit={handleProfileSubmit} />
               </div>
             </div>

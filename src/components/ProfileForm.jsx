@@ -80,13 +80,13 @@ const ProfileForm = ({ onSubmit }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-700">
+        <div className="mb-4 p-4 bg-red-500/10 border border-red-400/30 rounded-xl text-red-200">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>First Name</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">First Name</label>
         <input 
           name="firstName" 
           value={formData.firstName}
@@ -96,7 +96,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>Surname</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">Surname</label>
         <input 
           name="surname" 
           value={formData.surname}
@@ -106,7 +106,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>Age</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">Age</label>
         <input 
           type="number" 
           name="age" 
@@ -117,7 +117,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>Phone Number</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">Phone Number</label>
         <input 
           type="tel" 
           name="phoneNumber" 
@@ -128,7 +128,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+        <label className="block text-sm font-medium mb-2 text-slate-200">
           Preferred Programming Languages
         </label>
         <input
@@ -140,7 +140,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>Skills</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">Skills</label>
         <textarea
           name="skills"
           value={formData.skills}
@@ -151,7 +151,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>Projects Done</label>
+        <label className="block text-sm font-medium mb-2 text-slate-200">Projects Done</label>
         <textarea
           name="projectsDone"
           value={formData.projectsDone}
@@ -162,7 +162,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+        <label className="block text-sm font-medium mb-2 text-slate-200">
           LinkedIn Profile
         </label>
         <input 
@@ -174,7 +174,7 @@ const ProfileForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+        <label className="block text-sm font-medium mb-2 text-slate-200">
           GitHub Profile
         </label>
         <input 

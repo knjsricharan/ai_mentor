@@ -50,42 +50,43 @@ const Dashboard = ({ projects = [], setProjects }) => {
     navigate(`/project/${newProject.id}`);
   };
 
-  // Classic AI-inspired background pattern (same as auth flow)
   const backgroundStyle = {
     backgroundImage: `
-      radial-gradient(circle at 50% 0%, rgba(79,70,229,0.18), transparent 55%),
-      radial-gradient(circle at 100% 100%, rgba(124,58,237,0.16), transparent 60%),
-      linear-gradient(rgba(79,70,229,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(79,70,229,0.05) 1px, transparent 1px),
-      linear-gradient(180deg, #f5f7fb 0%, #eef1f7 100%)
+      radial-gradient(circle at 15% 20%, rgba(0,230,200,0.12), transparent 30%),
+      radial-gradient(circle at 85% 10%, rgba(105,56,239,0.12), transparent 35%),
+      linear-gradient(120deg, rgba(0,230,200,0.05), rgba(105,56,239,0.07)),
+      #0b1120
     `,
     backgroundSize: `
       auto,
       auto,
-      40px 40px,
-      40px 40px,
+      130% 130%,
       100% 100%
     `,
     backgroundPosition: `
-      top center,
-      bottom right,
-      0 0,
+      top left,
+      top right,
       0 0,
       0 0
     `,
     backgroundRepeat: `
       no-repeat,
       no-repeat,
-      repeat,
-      repeat,
+      no-repeat,
       no-repeat
     `
   };
 
   return (
-    <div className="min-h-screen" style={backgroundStyle}>
+    <div className="min-h-screen relative overflow-hidden" style={backgroundStyle}>
+      {/* Neural Network Background Effect */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute w-96 h-96 bg-primary-500/10 rounded-full blur-3xl top-20 left-10 animate-pulse-slow" />
+        <div className="absolute w-96 h-96 bg-accent-500/10 rounded-full blur-3xl bottom-20 right-10 animate-pulse-slow" style={{ animationDelay: '1s' }} />
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-dark-900/70 backdrop-blur-xl border-b border-white/5 shadow-[0_15px_60px_-45px_rgba(0,230,200,0.45)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -94,9 +95,9 @@ const Dashboard = ({ projects = [], setProjects }) => {
                 alt="CereBro AI" 
                 className="w-8 h-8 object-contain"
               />
-              <h1 className="text-2xl text-gray-900">
+              <h1 className="text-2xl text-slate-100">
                 <span className="font-bold">CereBro</span>{' '}
-                <span className="font-normal">AI</span>
+                <span className="font-normal text-primary-200">AI</span>
               </h1>
             </div>
             <div className="flex items-center gap-4">
@@ -111,11 +112,11 @@ const Dashboard = ({ projects = [], setProjects }) => {
                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0ea5e9&color=fff`;
                   }}
                 />
-                <span className="text-sm text-gray-700 font-medium">{user?.email || user?.displayName}</span>
+                <span className="text-sm text-slate-200 font-medium">{user?.email || user?.displayName}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-slate-300 hover:text-primary-200 hover:bg-white/5 rounded-lg transition-colors"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5" />
@@ -125,31 +126,67 @@ const Dashboard = ({ projects = [], setProjects }) => {
         </div>
       </header>
 
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-sm font-medium mb-6">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Your AI-Powered Execution Platform
+          </div>
+          <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            <span className="gradient-text">Execute Smarter,</span>
+            <br />
+            <span className="text-white">Build Faster</span>
+          </h2>
+          <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Manage your projects with AI-powered guidance. From idea to execution.
+          </p>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 pb-8 text-slate-100 relative z-10">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="card">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="card group hover:scale-[1.02] transition-all duration-300 animate-slide-in-left">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{projects.length}</p>
+                <p className="text-sm text-slate-300 mb-1">Total Projects</p>
+                <p className="text-4xl font-bold text-white">{projects.length}</p>
+                <p className="text-xs text-primary-300 mt-2">All time</p>
               </div>
-              <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                <FolderKanban className="w-6 h-6 text-primary-600" />
+              <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-primary-600/10 rounded-2xl flex items-center justify-center glow-ring group-hover:glow-teal-strong transition-all">
+                <FolderKanban className="w-8 h-8 text-primary-300" />
               </div>
             </div>
           </div>
-          <div className="card">
+          <div className="card group hover:scale-[1.02] transition-all duration-300 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Active Projects</p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-sm text-slate-300 mb-1">Active Projects</p>
+                <p className="text-4xl font-bold text-white">
                   {projects.filter(p => p.status === 'active').length}
                 </p>
+                <p className="text-xs text-accent-300 mt-2">In progress</p>
               </div>
-              <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-success-600" />
+              <div className="w-16 h-16 bg-gradient-to-br from-accent-500/15 to-accent-600/10 rounded-2xl flex items-center justify-center group-hover:glow-purple transition-all">
+                <TrendingUp className="w-8 h-8 text-accent-300" />
+              </div>
+            </div>
+          </div>
+          <div className="card group hover:scale-[1.02] transition-all duration-300 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-300 mb-1">Completed</p>
+                <p className="text-4xl font-bold text-white">
+                  {projects.filter(p => p.status === 'completed').length}
+                </p>
+                <p className="text-xs text-success-300 mt-2">Finished</p>
+              </div>
+              <div className="w-16 h-16 bg-gradient-to-br from-success-500/15 to-success-600/10 rounded-2xl flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-success-400/20 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-success-400" />
+                </div>
               </div>
             </div>
           </div>
@@ -157,10 +194,13 @@ const Dashboard = ({ projects = [], setProjects }) => {
 
         {/* Projects Section */}
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Your Projects</h2>
+            <p className="text-slate-400">Create, manage, and execute with AI guidance</p>
+          </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 shadow-lg hover:shadow-primary-500/30"
           >
             <Plus className="w-5 h-5" />
             Create New Project
@@ -170,16 +210,18 @@ const Dashboard = ({ projects = [], setProjects }) => {
         {/* Projects Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading projects...</p>
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-primary-500 border-t-transparent"></div>
+            <p className="mt-4 text-slate-300 text-lg">Loading your projects...</p>
           </div>
         ) : projects.length === 0 ? (
-          <div className="card text-center py-16">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FolderKanban className="w-10 h-10 text-gray-400" />
+          <div className="card text-center py-20 neural-bg">
+            <div className="w-24 h-24 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 glow-ring">
+              <FolderKanban className="w-12 h-12 text-slate-300" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h3>
-            <p className="text-gray-600 mb-6">Create your first project to get started with AI-powered guidance</p>
+            <h3 className="text-2xl font-bold text-white mb-3">No projects yet</h3>
+            <p className="text-slate-400 mb-8 text-lg max-w-md mx-auto">
+              Create your first project to get started with AI-powered execution guidance
+            </p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="btn-primary inline-flex items-center gap-2"
@@ -190,35 +232,59 @@ const Dashboard = ({ projects = [], setProjects }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <div
                 key={project.id}
                 onClick={() => navigate(`/project/${project.id}`)}
-                className="card cursor-pointer hover:scale-[1.02] transition-transform"
+                className="card cursor-pointer group relative overflow-hidden"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{project.name}</h3>
-                <p className="text-gray-600 mb-3 line-clamp-2">
-                  {project.description || 'No description yet'}
-                </p>
-                {project.domain && (
-                  <p className="text-sm text-primary-600 font-medium mb-3">
-                    Domain: {project.domain}
+                {/* Hover gradient effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 to-accent-500/0 group-hover:from-primary-500/5 group-hover:to-accent-500/5 transition-all duration-300 pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <FolderKanban className="w-6 h-6 text-primary-300" />
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      project.status === 'active'
+                        ? 'bg-primary-500/20 text-primary-100 border border-primary-500/40'
+                        : 'bg-white/5 text-slate-200 border border-white/10'
+                    }`}>
+                      {project.status}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary-200 transition-colors">
+                    {project.name}
+                  </h3>
+                  <p className="text-slate-300 mb-4 line-clamp-2 text-sm">
+                    {project.description || 'No description yet'}
                   </p>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    project.status === 'active'
-                      ? 'bg-success-100 text-success-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {project.status}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {project.teamSize 
-                      ? `${project.teamSize} ${project.teamSize === 1 ? 'member' : 'members'}`
-                      : 'Team size not set'
-                    }
-                  </span>
+                  
+                  {project.domain && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-primary-400" />
+                      <p className="text-sm text-primary-200 font-medium">
+                        {project.domain}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                    <span className="text-sm text-slate-400">
+                      {project.teamSize 
+                        ? `${project.teamSize} ${project.teamSize === 1 ? 'member' : 'members'}`
+                        : 'Team size not set'
+                      }
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center group-hover:bg-primary-500/20 transition-colors">
+                      <svg className="w-4 h-4 text-primary-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

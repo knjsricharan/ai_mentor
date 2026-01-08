@@ -45,23 +45,26 @@ const OnboardingWizard = ({ onComplete }) => {
     <div className="w-full h-full flex flex-col animate-fade-in">
       {/* HEADER - Fixed */}
       <div className="flex-shrink-0 mb-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 gap-2">
           {steps.map((_, index) => (
             <div key={index} className="flex items-center flex-1">
-              <div
-                className={`flex-1 h-2 rounded-full ${
-                  index <= currentStep
-                    ? 'bg-gradient-to-r from-primary-500 to-accent-500'
-                    : 'bg-gray-200'
-                }`}
-              />
+              <div className="flex-1 h-2 rounded-full overflow-hidden bg-white/10">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    index <= currentStep
+                      ? 'bg-gradient-to-r from-primary-500 via-primary-400 to-accent-500'
+                      : 'bg-white/5'
+                  }`}
+                  style={{ width: index <= currentStep ? '100%' : '35%' }}
+                />
+              </div>
               {index < steps.length - 1 && (
                 <div className="w-4" />
               )}
             </div>
           ))}
         </div>
-        <div className="text-center text-sm" style={{ color: '#6b7280' }}>
+        <div className="text-center text-sm text-slate-300">
           Step {currentStep + 1} of {steps.length}
         </div>
       </div>
@@ -71,10 +74,10 @@ const OnboardingWizard = ({ onComplete }) => {
         <div className="flex justify-center mb-6">
           {steps[currentStep].icon}
         </div>
-        <h2 className="text-3xl font-bold mb-4" style={{ color: '#111827' }}>
+        <h2 className="text-3xl font-bold mb-4 text-slate-50">
           {steps[currentStep].title}
         </h2>
-        <p className="text-lg max-w-md mx-auto" style={{ color: '#6b7280' }}>
+        <p className="text-lg max-w-md mx-auto text-slate-300 leading-relaxed">
           {steps[currentStep].description}
         </p>
       </div>
@@ -86,12 +89,9 @@ const OnboardingWizard = ({ onComplete }) => {
           disabled={currentStep === 0}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
             currentStep === 0
-              ? 'cursor-not-allowed'
-              : 'hover:bg-gray-100'
+              ? 'cursor-not-allowed text-slate-500'
+              : 'text-slate-100 hover:bg-white/5'
           }`}
-          style={{ 
-            color: currentStep === 0 ? '#9ca3af' : '#111827'
-          }}
         >
           <ArrowLeft className="w-5 h-5" />
           Previous
