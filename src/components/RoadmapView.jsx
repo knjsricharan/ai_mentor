@@ -26,7 +26,36 @@ const RoadmapView = ({ projectId, project }) => {
     const unsubscribeRoadmap = onSnapshot(projectRef, (docSnap) => {
       if (docSnap.exists()) {
         const projectData = docSnap.data();
-        setRoadmap(projectData.roadmap || null);
+        let roadmapData = projectData.roadmap || null;
+        
+        // Ensure all phases and tasks have IDs (for roadmaps generated before ID validation)
+        if (roadmapData && roadmapData.phases && Array.isArray(roadmapData.phases)) {
+          roadmapData = {
+            ...roadmapData,
+            phases: roadmapData.phases.map((phase, phaseIndex) => {
+              const phaseId = phase?.id || String(phaseIndex + 1);
+              const tasks = phase?.tasks || [];
+              return {
+                ...phase,
+                id: phaseId,
+                tasks: Array.isArray(tasks) ? tasks.map((task, taskIndex) => {
+                  const taskId = task?.id || `${phaseId}-${taskIndex + 1}`;
+                  const subTasks = task?.subTasks || [];
+                  return {
+                    ...task,
+                    id: taskId,
+                    subTasks: Array.isArray(subTasks) ? subTasks.map((subTask, subTaskIndex) => ({
+                      ...subTask,
+                      id: subTask?.id || `${taskId}-${subTaskIndex + 1}`,
+                    })) : [],
+                  };
+                }) : [],
+              };
+            }),
+          };
+        }
+        
+        setRoadmap(roadmapData);
       } else {
         setRoadmap(null);
       }
@@ -85,21 +114,30 @@ const RoadmapView = ({ projectId, project }) => {
   };
 
   const toggleTask = async (phaseId, taskId, isSubTask = false, parentTaskId = null) => {
-    if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases) || updating) return;
+    if (!roadmap || !roadmap.phases || !Array.isArray(roadmap.phases) || updating) {
+      return;
+    }
 
     const phase = roadmap.phases.find(p => p?.id === phaseId);
-    if (!phase || !phase.tasks || !Array.isArray(phase.tasks)) return;
+    if (!phase || !phase.tasks || !Array.isArray(phase.tasks)) {
+      return;
+    }
     
     let task;
     if (isSubTask && parentTaskId) {
       const parentTask = phase.tasks.find(t => t?.id === parentTaskId);
-      if (!parentTask || !parentTask.subTasks || !Array.isArray(parentTask.subTasks)) return;
+      if (!parentTask || !parentTask.subTasks || !Array.isArray(parentTask.subTasks)) {
+        return;
+      }
       task = parentTask.subTasks.find(st => st?.id === taskId);
     } else {
       task = phase.tasks.find(t => t?.id === taskId);
     }
     
-    if (!task) return;
+    if (!task) {
+      console.warn('Task not found:', { taskId, phaseId, isSubTask, parentTaskId });
+      return;
+    }
 
     const newCompletedStatus = !task.completed;
     setUpdating(true);
@@ -109,8 +147,7 @@ const RoadmapView = ({ projectId, project }) => {
       await updateTaskStatus(projectId, phaseId, taskId, newCompletedStatus, isSubTask, parentTaskId);
     } catch (error) {
       console.error('Error updating task status:', error);
-      // Show error to user
-      alert('Failed to update task. Please try again.');
+      alert(`Failed to update task: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
       setUpdating(false);
     }
@@ -279,12 +316,11 @@ const RoadmapView = ({ projectId, project }) => {
                     <div key={task?.id || `task-${Math.random()}`} className="space-y-2">
                       {/* Main Task */}
                       <div
-                        className={`flex items-center gap-3 p-4 rounded-xl transition-all group/task ${
+                        className={`flex items-center gap-3 p-4 rounded-xl transition-all group/task relative ${
                           task?.completed 
                             ? 'bg-primary-500/5 hover:bg-primary-500/10 border border-primary-500/20 hover:border-primary-500/30'
                             : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
                         }`}
-                        onMouseEnter={(e) => e.stopPropagation()}
                         style={{ animationDelay: `${taskIndex * 0.05}s` }}
                       >
                         <button
@@ -296,18 +332,25 @@ const RoadmapView = ({ projectId, project }) => {
                               toggleTask(phase.id, task.id);
                             }
                           }}
-                          className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-1 -m-1 transition-transform hover:scale-110"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          onMouseUp={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="flex-shrink-0 relative z-10 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-2 -m-2 transition-all hover:scale-110 active:scale-95 cursor-pointer"
                           disabled={updating}
                           aria-label={task?.completed ? 'Mark task as incomplete' : 'Mark task as complete'}
+                          style={{ pointerEvents: 'auto' }}
                         >
                           {task?.completed ? (
-                            <CheckCircle className="w-6 h-6 text-primary-300 transition-transform" />
+                            <CheckCircle className="w-6 h-6 text-primary-300 transition-transform pointer-events-none" />
                           ) : (
-                            <Circle className="w-6 h-6 text-slate-500 group-hover/task:text-slate-400 transition-colors" />
+                            <Circle className="w-6 h-6 text-slate-500 group-hover/task:text-slate-400 transition-colors pointer-events-none" />
                           )}
                         </button>
                         <span
-                          className={`flex-1 text-base ${
+                          className={`flex-1 text-base select-none ${
                             task?.completed
                               ? 'text-slate-400 line-through'
                               : 'text-white font-medium'
@@ -319,7 +362,7 @@ const RoadmapView = ({ projectId, project }) => {
                           )}
                         </span>
                         {!task?.completed && (
-                          <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center opacity-0 group-hover/task:opacity-100 transition-opacity">
+                          <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center opacity-0 group-hover/task:opacity-100 transition-opacity pointer-events-none">
                             <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -333,12 +376,11 @@ const RoadmapView = ({ projectId, project }) => {
                           {task.subTasks.map((subTask, subTaskIndex) => (
                             <div
                               key={subTask?.id || `subtask-${Math.random()}`}
-                              className={`flex items-center gap-3 p-3 rounded-lg transition-all group/subtask ${
+                              className={`flex items-center gap-3 p-3 rounded-lg transition-all group/subtask relative ${
                                 subTask?.completed 
                                   ? 'bg-primary-500/3 hover:bg-primary-500/8 border border-primary-500/15'
                                   : 'bg-white/3 hover:bg-white/8 border border-white/5'
                               }`}
-                              onMouseEnter={(e) => e.stopPropagation()}
                               style={{ animationDelay: `${(taskIndex * 0.05) + (subTaskIndex * 0.02)}s` }}
                             >
                               <button
@@ -350,18 +392,25 @@ const RoadmapView = ({ projectId, project }) => {
                                     toggleTask(phase.id, subTask.id, true, task.id);
                                   }
                                 }}
-                                className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-1 -m-1 transition-transform hover:scale-110"
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onMouseUp={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className="flex-shrink-0 relative z-10 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 focus:ring-offset-transparent rounded-lg p-2 -m-2 transition-all hover:scale-110 active:scale-95 cursor-pointer"
                                 disabled={updating}
                                 aria-label={subTask?.completed ? 'Mark sub-task as incomplete' : 'Mark sub-task as complete'}
+                                style={{ pointerEvents: 'auto' }}
                               >
                                 {subTask?.completed ? (
-                                  <CheckCircle className="w-5 h-5 text-primary-300 transition-transform" />
+                                  <CheckCircle className="w-5 h-5 text-primary-300 transition-transform pointer-events-none" />
                                 ) : (
-                                  <Circle className="w-5 h-5 text-slate-500 group-hover/subtask:text-slate-400 transition-colors" />
+                                  <Circle className="w-5 h-5 text-slate-500 group-hover/subtask:text-slate-400 transition-colors pointer-events-none" />
                                 )}
                               </button>
                               <span
-                                className={`flex-1 text-sm ${
+                                className={`flex-1 text-sm select-none ${
                                   subTask?.completed
                                     ? 'text-slate-500 line-through'
                                     : 'text-slate-300'
